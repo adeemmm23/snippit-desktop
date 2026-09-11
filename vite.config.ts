@@ -19,5 +19,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "/snippit/",
+  base: process.env.TAURI_ENV_PLATFORM ? "/" : "/snippit/",
+  server: {
+    host: "127.0.0.1",
+    port: 4034,
+    strictPort: true,
+    watch: {
+      ignored: ["**/src-tauri/**"],
+    },
+  },
 });
