@@ -6,9 +6,9 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/sonner";
-import Appbar from "@/features/appbar";
 import Editor from "@/features/editor";
 import Files from "@/features/files";
+import TitleBar from "@/features/titlebar";
 import Variables from "@/features/variables";
 
 export default function App() {
@@ -16,10 +16,10 @@ export default function App() {
     id: "main-layout",
     storage: localStorage,
   });
-
   return (
-    <main className="bg-background flex h-screen flex-col">
-      <Appbar />
+    <main className="flex h-screen flex-col">
+      <TitleBar />
+      {/*<Appbar />*/}
       <ResizablePanelGroup
         defaultLayout={defaultLayout}
         onLayoutChanged={onLayoutChanged}
