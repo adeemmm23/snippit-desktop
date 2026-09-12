@@ -1,4 +1,4 @@
-import { useDefaultLayout } from "react-resizable-panels";
+import { useDefaultLayout, usePanelRef } from "react-resizable-panels";
 
 import {
   ResizableHandle,
@@ -16,9 +16,12 @@ export default function App() {
     id: "main-layout",
     storage: localStorage,
   });
+
+  const leftPanelRef = usePanelRef();
+  const rightPanelRef = usePanelRef();
   return (
     <main className="flex h-screen flex-col">
-      <TitleBar />
+      <TitleBar leftPanelRef={leftPanelRef} rightPanelRef={rightPanelRef} />
       {/*<Appbar />*/}
       <ResizablePanelGroup
         defaultLayout={defaultLayout}
@@ -28,6 +31,7 @@ export default function App() {
       >
         <ResizablePanel
           id="left-sidebar"
+          panelRef={leftPanelRef}
           defaultSize={280}
           minSize={260}
           maxSize={300}
@@ -51,6 +55,7 @@ export default function App() {
         />
         <ResizablePanel
           id="right-sidebar"
+          panelRef={rightPanelRef}
           defaultSize={280}
           minSize={260}
           maxSize={300}

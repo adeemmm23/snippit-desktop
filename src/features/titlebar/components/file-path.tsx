@@ -46,7 +46,7 @@ export default function FilePath() {
 
   if (!file) {
     return (
-      <Breadcrumb className="flex h-9 items-center py-1">
+      <Breadcrumb className="group flex h-9 items-center py-1 opacity-30 transition-opacity group-hover:opacity-100">
         <BreadcrumbList>
           <BreadcrumbItem className="select-none">
             <BreadcrumbLink className="text-sm">
@@ -58,7 +58,7 @@ export default function FilePath() {
     );
   }
   return (
-    <Breadcrumb className="flex h-9 items-center py-1">
+    <Breadcrumb className="flex h-9 items-center py-1 opacity-30 transition-opacity hover:opacity-100">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink
