@@ -93,7 +93,7 @@ export default function ImportDialog() {
       <DialogTrigger render={<Button variant="outline">Import</Button>} />
       <DialogContent
         forceOverlayRender
-        className="bg-popover data-nested-dialog-open:scale-95"
+        className="bg-popover select-none data-nested-dialog-open:scale-95"
       >
         <DialogHeader>
           <DialogTitle>Import snippets</DialogTitle>

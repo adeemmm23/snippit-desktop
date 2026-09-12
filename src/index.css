@@ -128,6 +128,12 @@
     color: oklch(from var(--color-primary-foreground) calc(l + 0.05) c h);
     background-color: oklch(from var(--color-primary) calc(l + 0.05) c h);
   }
+
+  input::placeholder {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
