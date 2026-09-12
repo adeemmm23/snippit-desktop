@@ -22,7 +22,6 @@ export default function App() {
   return (
     <main className="flex h-screen flex-col">
       <TitleBar leftPanelRef={leftPanelRef} rightPanelRef={rightPanelRef} />
-      {/*<Appbar />*/}
       <ResizablePanelGroup
         defaultLayout={defaultLayout}
         onLayoutChanged={onLayoutChanged}
