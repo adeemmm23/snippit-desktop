@@ -14,7 +14,9 @@ export default function SaveIndicator() {
   const template = useEditorStore((state) => state.template);
 
   if (node && isFile(node) && node.content !== template) {
-    return <span className="text-primary"> •</span>;
+    return (
+      <span className="bg-primary absolute top-1 right-1 size-1 rounded-full" />
+    );
   }
 
   return null;

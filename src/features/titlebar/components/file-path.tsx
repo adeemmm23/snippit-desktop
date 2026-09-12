@@ -1,5 +1,3 @@
-import SaveIndicator from "./save-indicator";
-
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -128,7 +126,6 @@ export default function FilePath() {
               className="text-sm select-none"
             >
               {file}
-              <SaveIndicator />
             </BreadcrumbPage>
           </BreadcrumbItem>
         )}
