@@ -1,8 +1,9 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import { deepClone, getAvailableName, isDeepEqual } from "./utils";
 import { useEditorStore } from "../editor/editor-store";
+import { fsStorage } from "../storage";
 
 import { isFile, isFolder, type NodeType } from "@/types/node.types";
 import { getNodeContent } from "@/utils/files.utils";
@@ -409,6 +410,7 @@ export const useFilesStore = create<FilesStore>()(
     }),
     {
       name: "files",
+      storage: createJSONStorage(() => fsStorage),
     },
   ),
 );
