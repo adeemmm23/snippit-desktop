@@ -12,6 +12,9 @@
   "app": {
     "windows": [
       {
+        "windowEffects": {
+          "effects": ["mica"]
+        },
         "title": "Snippit",
         "width": 1200,
         "height": 800,
