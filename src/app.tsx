@@ -1,5 +1,7 @@
 import { useDefaultLayout, usePanelRef } from "react-resizable-panels";
 
+import { useNativeContextMenu } from "./hooks/use-native-context-menu";
+
 import {
   ResizableHandle,
   ResizablePanel,
@@ -19,6 +21,8 @@ export default function App() {
 
   const leftPanelRef = usePanelRef();
   const rightPanelRef = usePanelRef();
+
+  useNativeContextMenu();
   return (
     <main className="flex h-screen flex-col">
       <TitleBar leftPanelRef={leftPanelRef} rightPanelRef={rightPanelRef} />
