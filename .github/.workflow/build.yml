@@ -1,0 +1,50 @@
+name: Release Tauri App (Windows)
+
+on:
+  push:
+    tags:
+      - "v*" # Trigger on version tags (e.g., git tag v1.0.0)
+  workflow_dispatch:
+
+permissions:
+  contents: write # Required to create a GitHub Release and upload binaries
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and release Tauri app
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "Snippit v__VERSION__"
+          releaseBody: "See the assets below to download and install this version for Windows."
+          releaseDraft: true
+          prerelease: false

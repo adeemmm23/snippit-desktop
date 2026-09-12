@@ -33,7 +33,7 @@ export default function CollectionSelector() {
           value={activeCollection}
           onValueChange={handleCollectionChange}
         >
-          <SelectTrigger className="dark:bg-background w-full border-0 shadow-none">
+          <SelectTrigger className="dark:bg-background/0 w-full border-0 shadow-none">
             <SelectValue placeholder="Select Collection" />
           </SelectTrigger>
           <SelectContent>
