@@ -1,3 +1,5 @@
+import { openUrl } from "@tauri-apps/plugin-opener";
+
 import SettingGroup from "../ui/setting-group";
 
 export default function AboutSettingGroup() {
@@ -9,7 +11,12 @@ export default function AboutSettingGroup() {
         snippets in one place. You can visit the{" "}
         <a
           href="https://github.com/adeemmm23/snippit-desktop"
+          onClick={(e) => {
+            e.preventDefault();
+            openUrl("https://github.com/adeemmm23/snippit-desktop");
+          }}
           target="_blank"
+          rel="noreferrer"
           className="text-primary"
         >
           GitHub repository
