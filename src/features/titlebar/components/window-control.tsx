@@ -34,7 +34,7 @@ export default function WindowControls() {
 
   const handleClose = () => appWindow.close();
   return (
-    <div className="flex h-full items-center">
+    <div className="z-999 flex h-full items-center">
       {/* Minimize */}
       <button
         onClick={handleMinimize}

@@ -31,7 +31,7 @@ export default function FilePath() {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setViewMode("full");
-      } else if (window.innerWidth >= 640) {
+      } else if (window.innerWidth >= 768) {
         setViewMode("medium");
       } else {
         setViewMode("small");
@@ -51,7 +51,7 @@ export default function FilePath() {
       <Breadcrumb className="group flex h-9 items-center py-1 opacity-30 transition-opacity group-hover:opacity-100">
         <BreadcrumbList>
           <BreadcrumbItem className="select-none">
-            <BreadcrumbLink className="max-w-48 truncate text-sm">
+            <BreadcrumbLink className="max-w-40 truncate text-sm">
               No file is opened
             </BreadcrumbLink>
           </BreadcrumbItem>
@@ -67,7 +67,7 @@ export default function FilePath() {
           <BreadcrumbItem>
             <BreadcrumbPage
               onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
-              className="max-w-48 truncate text-sm select-none"
+              className="max-w-40 truncate text-sm select-none"
               title={file}
             >
               {file}
@@ -93,7 +93,7 @@ export default function FilePath() {
         <BreadcrumbItem>
           <BreadcrumbLink
             onClick={() => setCurrentWorkingFolder([])}
-            className="max-w-48 truncate text-sm select-none"
+            className="max-w-40 truncate text-sm select-none"
           >
             Root
           </BreadcrumbLink>
@@ -145,7 +145,7 @@ export default function FilePath() {
             <BreadcrumbItem>
               <BreadcrumbLink
                 onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
-                className="max-w-48 truncate text-sm select-none"
+                className="max-w-40 truncate text-sm select-none"
                 title={parenFolder}
               >
                 {parenFolder}
@@ -159,7 +159,7 @@ export default function FilePath() {
         <BreadcrumbItem>
           <BreadcrumbPage
             onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
-            className="max-w-48 truncate text-sm select-none"
+            className="max-w-40 truncate text-sm select-none"
             title={file}
           >
             {file}
