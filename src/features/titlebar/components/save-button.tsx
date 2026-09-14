@@ -3,6 +3,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import SaveIndicator from "./save-indicator";
+
 import { Button } from "@/components/ui/button";
 import { KbdGroup, Kbd } from "@/components/ui/kbd";
 import {
@@ -37,7 +39,8 @@ export default function SaveButton() {
         render={
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
+            className="relative"
             onClick={() => {
               const isSaved = saveActiveFile();
               if (isSaved) {
@@ -48,6 +51,7 @@ export default function SaveButton() {
             }}
           >
             <HugeiconsIcon icon={FloppyDiskIcon} className="size-4" />
+            <SaveIndicator />
           </Button>
         }
       />

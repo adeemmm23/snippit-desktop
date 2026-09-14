@@ -2,12 +2,11 @@ import SettingGroup from "../ui/setting-group";
 
 import { Label } from "@/components/ui/label";
 import { RadioGroupItem, RadioGroup } from "@/components/ui/radio-group";
-import useSettingsStore from "@/stores/settings/settings-store";
-import type { Theme } from "@/stores/settings/slices/theme-slice";
+import { useThemeStore, type Theme } from "@/stores/theme/theme-store";
 
 export default function ThemeSettingGroup() {
-  const theme = useSettingsStore((state) => state.theme);
-  const setTheme = useSettingsStore((state) => state.setTheme);
+  const theme = useThemeStore((state) => state.theme);
+  const setTheme = useThemeStore((state) => state.setTheme);
 
   const handleThemeChange = (value: Theme) => {
     setTheme(value);

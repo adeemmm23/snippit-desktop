@@ -1,13 +1,16 @@
 import { create } from "zustand";
-import { persist, subscribeWithSelector } from "zustand/middleware";
+import {
+  createJSONStorage,
+  persist,
+  subscribeWithSelector,
+} from "zustand/middleware";
 
+import { fsStorage } from "../storage";
 import { createHelpersSlice } from "./slices/helper-slice";
-import { createThemeSlice } from "./slices/theme-slice";
 import { createTooltipsSlice } from "./slices/tooltips-slice";
 import { createVariableSlice } from "./slices/variable-slice";
 
 const settingsSlices = [
-  createThemeSlice,
   createVariableSlice,
   createTooltipsSlice,
   createHelpersSlice,
@@ -31,7 +34,7 @@ const useSettingsStore = create<SettingsStore>()(
           {},
           ...settingsSlices.map((createSlice) => createSlice(...args)),
         ),
-      { name: "settings" },
+      { name: "settings", storage: createJSONStorage(() => fsStorage) },
     ),
   ),
 );

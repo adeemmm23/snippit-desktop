@@ -41,7 +41,7 @@ export default function PasswordSettingContent({
   }, [options, onChange]);
 
   return (
-    <DialogContent forceOverlayRender className="bg-popover">
+    <DialogContent forceOverlayRender className="bg-popover select-none">
       <DialogHeader>
         <DialogTitle>Configure Password</DialogTitle>
         <DialogDescription>

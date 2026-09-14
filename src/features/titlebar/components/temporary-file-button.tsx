@@ -20,7 +20,7 @@ export default function TemporaryFileButton() {
         render={
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={() => {
               setTemplate("");
               setActiveFilePath([]);

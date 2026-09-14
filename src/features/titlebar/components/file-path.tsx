@@ -1,4 +1,4 @@
-import SaveIndicator from "./save-indicator";
+import { useEffect, useState } from "react";
 
 import {
   Breadcrumb,
@@ -21,52 +21,85 @@ import { useFilesStore } from "@/stores/files/files-store";
 
 export default function FilePath() {
   const activeFile = useFilesStore((state) => state.activeFile);
-
   const setCurrentWorkingFolder = useFilesStore(
     (state) => state.setCurrentFolder,
   );
 
-  const { file, parenFolder, rest } = activeFile.reduce(
-    (acc, segment, index) => {
-      if (index === activeFile.length - 1) {
-        acc.file = segment;
-      } else if (index === activeFile.length - 2) {
-        acc.parenFolder = segment;
+  const [viewMode, setViewMode] = useState<"full" | "medium" | "small">("full");
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setViewMode("full");
+      } else if (window.innerWidth >= 768) {
+        setViewMode("medium");
       } else {
-        acc.rest.push(segment);
+        setViewMode("small");
       }
-      return acc;
-    },
-    {
-      file: null as string | null,
-      parenFolder: null as string | null,
-      rest: [] as string[],
-    },
-  );
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const file = activeFile.length > 0 ? activeFile[activeFile.length - 1] : null;
 
   if (!file) {
     return (
-      <Breadcrumb className="flex h-9 items-center px-2">
+      <Breadcrumb className="group flex h-9 items-center py-1 opacity-30 transition-opacity group-hover:opacity-100">
         <BreadcrumbList>
           <BreadcrumbItem className="select-none">
-            <BreadcrumbLink>No file is opened</BreadcrumbLink>
+            <BreadcrumbLink className="max-w-40 truncate text-sm">
+              No file is opened
+            </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
     );
   }
+
+  if (viewMode === "small") {
+    return (
+      <Breadcrumb className="flex h-9 items-center py-1 opacity-30 transition-opacity hover:opacity-100">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage
+              onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
+              className="max-w-40 truncate text-sm select-none"
+              title={file}
+            >
+              {file}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  const showParent = viewMode === "full" && activeFile.length > 2;
+  const parenFolder = showParent ? activeFile[activeFile.length - 2] : null;
+
+  const dropdownLimit =
+    viewMode === "full" ? activeFile.length - 2 : activeFile.length - 1;
+  const dropdownSegments = activeFile
+    .map((segment, index) => ({ segment, index }))
+    .slice(0, Math.max(0, dropdownLimit));
+
   return (
-    <Breadcrumb className="flex h-9 items-center px-2">
+    <Breadcrumb className="flex h-9 items-center py-1 opacity-30 transition-opacity hover:opacity-100">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink
             onClick={() => setCurrentWorkingFolder([])}
-            className="select-none"
+            className="max-w-40 truncate text-sm select-none"
           >
             Root
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {rest.length > 0 && (
+
+        {dropdownSegments.length > 0 && (
           <>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -81,7 +114,7 @@ export default function FilePath() {
                 />
                 <DropdownMenuContent align="start" className="w-50">
                   <DropdownMenuGroup>
-                    {rest.map((segment, index) => (
+                    {dropdownSegments.map(({ segment, index }) => (
                       <DropdownMenuItem
                         key={index}
                         render={
@@ -90,7 +123,7 @@ export default function FilePath() {
                             className="truncate"
                             onClick={() =>
                               setCurrentWorkingFolder(
-                                activeFile.slice(0, index - rest.length - 1),
+                                activeFile.slice(0, index + 1),
                               )
                             }
                           >
@@ -105,31 +138,33 @@ export default function FilePath() {
             </BreadcrumbItem>
           </>
         )}
+
         {parenFolder && (
           <>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink
                 onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
-                className="select-none"
+                className="max-w-40 truncate text-sm select-none"
+                title={parenFolder}
               >
                 {parenFolder}
               </BreadcrumbLink>
             </BreadcrumbItem>
           </>
         )}
+
         <BreadcrumbSeparator />
-        {file && (
-          <BreadcrumbItem>
-            <BreadcrumbPage
-              onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
-              className="select-none"
-            >
-              {file}
-              <SaveIndicator />
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        )}
+
+        <BreadcrumbItem>
+          <BreadcrumbPage
+            onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
+            className="max-w-40 truncate text-sm select-none"
+            title={file}
+          >
+            {file}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   );

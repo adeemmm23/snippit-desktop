@@ -51,7 +51,7 @@ export default function FolderSelector({
       forceOverlayRender
       className="bg-popover flex h-7/12 flex-col gap-2"
     >
-      <DialogHeader>
+      <DialogHeader className="select-none">
         <DialogTitle>Choose a folder</DialogTitle>
         <DialogDescription>
           Select a folder to import your snippets into.

@@ -18,7 +18,7 @@ export default function SaveButton() {
           render={
             <TooltipTrigger
               render={
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon-sm">
                   <HugeiconsIcon icon={Settings01Icon} className="size-4" />
                 </Button>
               }

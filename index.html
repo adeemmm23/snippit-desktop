@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>snippit</title>
   </head>
@@ -11,7 +11,7 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- apply theme before appload -->
     <script>
-      const data = localStorage.getItem("settings");
+      const data = localStorage.getItem("theme");
       const theme = data ? JSON.parse(data).state.theme : "system";
       document.documentElement.classList.remove("light", "dark");
 

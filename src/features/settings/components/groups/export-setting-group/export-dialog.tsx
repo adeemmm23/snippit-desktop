@@ -72,7 +72,7 @@ export default function ExportDialog() {
   return (
     <Dialog open={exportOpen} onOpenChange={setExportOpen}>
       <DialogTrigger render={<Button variant="outline">Export</Button>} />
-      <DialogContent forceOverlayRender className="bg-popover">
+      <DialogContent forceOverlayRender className="bg-popover select-none">
         <DialogHeader>
           <DialogTitle>Export snippets</DialogTitle>
           <DialogDescription>

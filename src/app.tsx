@@ -1,4 +1,6 @@
-import { useDefaultLayout } from "react-resizable-panels";
+import { useDefaultLayout, usePanelRef } from "react-resizable-panels";
+
+import { useNativeContextMenu } from "./hooks/use-native-context-menu";
 
 import {
   ResizableHandle,
@@ -6,9 +8,9 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Toaster } from "@/components/ui/sonner";
-import Appbar from "@/features/appbar";
 import Editor from "@/features/editor";
 import Files from "@/features/files";
+import TitleBar from "@/features/titlebar";
 import Variables from "@/features/variables";
 
 export default function App() {
@@ -17,9 +19,13 @@ export default function App() {
     storage: localStorage,
   });
 
+  const leftPanelRef = usePanelRef();
+  const rightPanelRef = usePanelRef();
+
+  useNativeContextMenu();
   return (
-    <main className="bg-background flex h-screen flex-col">
-      <Appbar />
+    <main className="flex h-screen flex-col">
+      <TitleBar leftPanelRef={leftPanelRef} rightPanelRef={rightPanelRef} />
       <ResizablePanelGroup
         defaultLayout={defaultLayout}
         onLayoutChanged={onLayoutChanged}
@@ -28,6 +34,7 @@ export default function App() {
       >
         <ResizablePanel
           id="left-sidebar"
+          panelRef={leftPanelRef}
           defaultSize={280}
           minSize={260}
           maxSize={300}
@@ -51,6 +58,7 @@ export default function App() {
         />
         <ResizablePanel
           id="right-sidebar"
+          panelRef={rightPanelRef}
           defaultSize={280}
           minSize={260}
           maxSize={300}
