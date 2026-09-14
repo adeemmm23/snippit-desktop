@@ -45,7 +45,7 @@ export default function PanelToggle({ panelRef, side }: PanelToggleProps) {
         }
       />
       <TooltipContent side="bottom">
-        <p>Toggle left panel</p>
+        <p>Toggle {side} panel</p>
       </TooltipContent>
     </Tooltip>
   );
