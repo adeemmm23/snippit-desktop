@@ -15,11 +15,11 @@ export function useNativeContextMenu() {
         const selectAllItem = await PredefinedMenuItem.new({
           item: "SelectAll",
         });
+        const separator = await PredefinedMenuItem.new({ item: "Separator" });
 
         const menu = await Menu.new({
-          items: [cutItem, copyItem, pasteItem, selectAllItem],
+          items: [cutItem, copyItem, pasteItem, separator, selectAllItem],
         });
-
         if (isMounted) {
           menuRef.current = menu;
         }
