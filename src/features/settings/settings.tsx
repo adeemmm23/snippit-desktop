@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function Settings() {
   return (
-    <DialogContent className="bg-popover flex h-full max-h-11/12 w-full max-w-5xl! flex-col data-nested-dialog-open:scale-95">
+    <DialogContent className="bg-popover flex h-[calc(100%-6rem)] w-full max-w-5xl! flex-col data-nested-dialog-open:scale-95">
       <DialogHeader className="shrink-0 select-none">
         <DialogTitle className="text-2xl">Settings</DialogTitle>
         <DialogDescription>
