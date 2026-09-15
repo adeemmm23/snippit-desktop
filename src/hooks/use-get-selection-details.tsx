@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, useCallback, RefObject } from "react";
+import { useLayoutEffect, useState, useCallback, type RefObject } from "react";
 
 export type TargetSelector =
   | string
