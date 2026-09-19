@@ -21,11 +21,24 @@ export default function Editor() {
       onLayoutChanged={onLayoutChanged}
       orientation="vertical"
     >
-      <ResizablePanel minSize="25%" defaultSize="50%" collapsible>
+      <ResizablePanel
+        minSize="25%"
+        defaultSize="50%"
+        collapsible
+        className="animate-in fade-in-0 fill-mode-backwards delay-100 duration-500 ease-in-out"
+      >
         <Input />
       </ResizablePanel>
-      <ResizableHandle className="bg-transparent py-2" withHandle />
-      <ResizablePanel minSize="25%" defaultSize="50%" collapsible>
+      <ResizableHandle
+        className="fade-in animate-in zoom-in bg-transparent py-2 duration-500 ease-in-out"
+        withHandle
+      />
+      <ResizablePanel
+        minSize="25%"
+        defaultSize="50%"
+        collapsible
+        className="animate-in fade-in-0 fill-mode-backwards delay-150 duration-500 ease-in-out"
+      >
         <Output />
       </ResizablePanel>
     </ResizablePanelGroup>

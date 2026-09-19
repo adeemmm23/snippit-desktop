@@ -48,7 +48,7 @@ export default function FilePath() {
 
   if (!file) {
     return (
-      <Breadcrumb className="group flex h-9 items-center py-1 opacity-30 transition-opacity group-hover:opacity-100">
+      <Breadcrumb className="group fade-in animate-in flex h-9 items-center py-1 opacity-30 transition-opacity duration-500 ease-in-out group-hover:opacity-100">
         <BreadcrumbList>
           <BreadcrumbItem className="select-none">
             <BreadcrumbLink className="max-w-40 truncate text-sm">
@@ -62,7 +62,7 @@ export default function FilePath() {
 
   if (viewMode === "small") {
     return (
-      <Breadcrumb className="flex h-9 items-center py-1 opacity-30 transition-opacity hover:opacity-100">
+      <Breadcrumb className="fade-in animate-in flex h-9 items-center py-1 opacity-30 transition-opacity duration-500 ease-in-out hover:opacity-100">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbPage
@@ -88,7 +88,7 @@ export default function FilePath() {
     .slice(0, Math.max(0, dropdownLimit));
 
   return (
-    <Breadcrumb className="flex h-9 items-center py-1 opacity-30 transition-opacity hover:opacity-100">
+    <Breadcrumb className="fade-in animate-in flex h-9 items-center py-1 opacity-30 transition-opacity duration-500 ease-in-out hover:opacity-100">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink

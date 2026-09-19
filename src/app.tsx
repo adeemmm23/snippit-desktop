@@ -1,8 +1,5 @@
 import { useDefaultLayout, usePanelRef } from "react-resizable-panels";
 
-import { useNativeContextMenu } from "./hooks/use-native-context-menu";
-import { useTheme } from "./hooks/use-theme";
-
 import {
   ResizableHandle,
   ResizablePanel,
@@ -13,6 +10,9 @@ import Editor from "@/features/editor";
 import Files from "@/features/files";
 import TitleBar from "@/features/titlebar";
 import Variables from "@/features/variables";
+import { useInit } from "@/hooks/use-init";
+import { useNativeContextMenu } from "@/hooks/use-native-context-menu";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function App() {
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
@@ -23,6 +23,7 @@ export default function App() {
   const leftPanelRef = usePanelRef();
   const rightPanelRef = usePanelRef();
 
+  useInit();
   useTheme();
   useNativeContextMenu();
   return (
@@ -36,6 +37,7 @@ export default function App() {
       >
         <ResizablePanel
           id="left-sidebar"
+          className="fade-in animate-in slide-in-from-left-5 duration-500 ease-in-out"
           panelRef={leftPanelRef}
           defaultSize={280}
           minSize={260}
@@ -46,7 +48,7 @@ export default function App() {
           <Files />
         </ResizablePanel>
         <ResizableHandle
-          className="bg-transparent px-2"
+          className="fade-in animate-in zoom-in bg-transparent px-2 duration-500 ease-in-out"
           withHandle
           side="right"
         />
@@ -54,12 +56,13 @@ export default function App() {
           <Editor />
         </ResizablePanel>
         <ResizableHandle
-          className="bg-transparent px-2"
+          className="fade-in animate-in zoom-in bg-transparent px-2 duration-500 ease-in-out"
           withHandle
           side="left"
         />
         <ResizablePanel
           id="right-sidebar"
+          className="fade-in animate-in slide-in-from-right-5 duration-500 ease-in-out"
           panelRef={rightPanelRef}
           defaultSize={280}
           minSize={260}
