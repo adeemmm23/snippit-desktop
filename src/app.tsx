@@ -52,7 +52,11 @@ export default function App() {
           withHandle
           side="right"
         />
-        <ResizablePanel id="editor" minSize="50%">
+        <ResizablePanel
+          id="editor"
+          minSize="50%"
+          className="fade-in animate-in slide-in-from-bottom-5 duration-500 ease-in-out"
+        >
           <Editor />
         </ResizablePanel>
         <ResizableHandle
