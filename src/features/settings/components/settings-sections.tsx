@@ -4,7 +4,6 @@ import AboutSettingGroup from "./groups/about-setting-group";
 import CollectionsSettingGroup from "./groups/collections-setting-group";
 import HelpersSettingGroup from "./groups/helpers-setting-group";
 import ShortcutsGroup from "./groups/shortcuts-setting-group";
-import ThemeSettingGroup from "./groups/theme-setting-group";
 import TooltipsGroup from "./groups/tooltips-setting-group";
 import VariableSettingGroup from "./groups/variable-setting-group";
 import SettingSection from "./ui/setting-section";
@@ -64,9 +63,6 @@ export default function SettingsSections() {
           className="flex min-h-full flex-col gap-10 px-4"
           id="settings-sections"
         >
-          <SettingSection title="Appearance">
-            <ThemeSettingGroup />
-          </SettingSection>
           <SettingSection title="Editor">
             <VariableSettingGroup />
             <HelpersSettingGroup />

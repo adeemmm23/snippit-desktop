@@ -11,19 +11,13 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- apply theme before appload -->
     <script>
-      const data = localStorage.getItem("theme");
-      const theme = data ? JSON.parse(data).state.theme : "system";
-      document.documentElement.classList.remove("light", "dark");
-
-      if (theme !== "system") {
-        document.documentElement.classList.add(theme);
-      } else {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-          .matches
-          ? "dark"
-          : "light";
-        document.documentElement.classList.add(systemTheme);
-      }
+      const cl = document.documentElement.classList;
+      cl.remove("dark", "light");
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
+      document.documentElement.classList.add(systemTheme);
     </script>
   </body>
 </html>
