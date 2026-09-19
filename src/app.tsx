@@ -11,7 +11,6 @@ import Files from "@/features/files";
 import TitleBar from "@/features/titlebar";
 import Variables from "@/features/variables";
 import { useInit } from "@/hooks/use-init";
-import { useNativeContextMenu } from "@/hooks/use-native-context-menu";
 import { useTheme } from "@/hooks/use-theme";
 
 export default function App() {
@@ -25,7 +24,6 @@ export default function App() {
 
   useInit();
   useTheme();
-  useNativeContextMenu();
   return (
     <main className="flex h-screen flex-col">
       <TitleBar leftPanelRef={leftPanelRef} rightPanelRef={rightPanelRef} />

@@ -3412,6 +3412,8 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-prevent-default",
  "tauri-plugin-single-instance",
+ "webview2-com",
+ "windows",
 ]
 
 [[package]]
