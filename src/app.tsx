@@ -25,7 +25,7 @@ export default function App() {
   useInit();
   useTheme();
   return (
-    <main className="flex h-screen flex-col">
+    <main className="flex h-screen flex-col" data-tauri-drag-region>
       <TitleBar leftPanelRef={leftPanelRef} rightPanelRef={rightPanelRef} />
       <ResizablePanelGroup
         defaultLayout={defaultLayout}

@@ -38,7 +38,10 @@ export default function Variables() {
           </ScrollArea>
         </>
       ) : (
-        <div className="text-muted-foreground my-auto py-8 text-center">
+        <div
+          className="text-muted-foreground my-auto py-8 text-center"
+          data-tauri-drag-region
+        >
           <div className="bg-muted mb-4 inline-flex items-center justify-center rounded-sm p-2">
             <HugeiconsIcon icon={ThreeDViewIcon} className="size-5" />
           </div>
