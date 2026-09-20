@@ -1,6 +1,6 @@
 [package]
 name = "snippit"
-version = "0.1.0"
+version = "../package.json"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
