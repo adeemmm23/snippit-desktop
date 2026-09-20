@@ -16,16 +16,6 @@ try {
   process.exit(1);
 }
 
-const pkgPath = resolve(process.cwd(), "package.json");
-if (!existsSync(pkgPath)) {
-  console.error("[version] Error: package.json not found.");
-  process.exit(1);
-}
-
-const rawPkgContent = readFileSync(pkgPath, "utf-8");
-const pkg = JSON.parse(rawPkgContent);
-const currentVersion = pkg.version || "0.0.0";
-
 function getBumpType(msg) {
   if (/^[a-z]+(\(.*\))?!:/.test(msg) || /BREAKING CHANGE/.test(msg)) {
     return "major";
@@ -43,6 +33,30 @@ const bumpType = getBumpType(commitMsg);
 
 if (!bumpType) {
   process.exit(0);
+}
+
+const pkgPath = resolve(process.cwd(), "package.json");
+if (!existsSync(pkgPath)) {
+  console.error("[version] Error: package.json not found.");
+  process.exit(1);
+}
+
+let rawPkgContent = "";
+try {
+  rawPkgContent = execSync("git show HEAD~1:package.json", {
+    encoding: "utf-8",
+  });
+} catch (_) {
+  rawPkgContent = readFileSync(pkgPath, "utf-8");
+}
+
+let baseVersion = "0.0.0";
+try {
+  const basePkg = JSON.parse(rawPkgContent);
+  baseVersion = basePkg.version || "0.0.0";
+} catch (err) {
+  console.error("[version] Error parsing base package.json:", err.message);
+  process.exit(1);
 }
 
 function bumpSemver(version, type) {
@@ -71,9 +85,12 @@ function bumpSemver(version, type) {
   return `${major}.${minor}.${patch}`;
 }
 
-const newVersion = bumpSemver(currentVersion, bumpType);
+const newVersion = bumpSemver(baseVersion, bumpType);
 
 try {
+  const diskPkgContent = readFileSync(pkgPath, "utf-8");
+  const pkg = JSON.parse(diskPkgContent);
+
   pkg.version = newVersion;
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
@@ -84,13 +101,9 @@ try {
   });
 
   console.log(
-    `\x1b[32m[version]\x1b[0m Version updated & included in commit: ${currentVersion} -> ${newVersion} (${bumpType})`,
+    `\x1b[32m[version]\x1b[0m Version updated & included in commit: ${baseVersion} -> ${newVersion} (${bumpType})`,
   );
 } catch (err) {
-  try {
-    writeFileSync(pkgPath, rawPkgContent);
-  } catch (_) {}
-
   console.error("[version] Failed to amend commit:", err.message);
   process.exit(1);
 }
