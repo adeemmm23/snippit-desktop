@@ -42,6 +42,7 @@ export default defineConfig([
           },
         },
       ],
+      // Disabled because of react compiler
       "react-hooks/exhaustive-deps": "off",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
