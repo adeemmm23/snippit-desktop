@@ -23,12 +23,6 @@ export default function AboutSettingGroup() {
         </a>{" "}
         to learn more.
       </p>
-      <img
-        src="/logo.svg"
-        alt="Snippit Desktop Logo"
-        className="mt-2 w-10"
-        draggable="false"
-      />
     </SettingGroup>
   );
 }
