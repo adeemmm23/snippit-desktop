@@ -27,6 +27,7 @@ type ActionDialogType = "delete" | "rename" | "create" | null;
 
 // TODO: handle span overflow
 // TODO: fix closing animation comes with default values
+// TODO: use input instead of div and a rename dialog
 export default function CollectionsSettingGroup() {
   const collections = useFilesStore((state) => state.collections);
   const createCollection = useFilesStore((state) => state.createCollection);

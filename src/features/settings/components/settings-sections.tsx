@@ -83,7 +83,7 @@ export default function SettingsSections() {
           </SettingSection>
         </div>
         {/* End of content, push scroll area to bottom */}
-        <div className="min-h-[calc(100%-18.75rem)]" />
+        <div className="min-h-[calc(100%-18rem)]" />
       </ScrollArea>
     </main>
   );
