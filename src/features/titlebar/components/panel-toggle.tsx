@@ -14,27 +14,31 @@ import {
 
 type PanelToggleProps = {
   panelRef: ReturnType<typeof usePanelRef>;
+  otherPanelRef: ReturnType<typeof usePanelRef>;
   side: "left" | "right";
 };
 
-export default function PanelToggle({ panelRef, side }: PanelToggleProps) {
+export default function PanelToggle({
+  panelRef,
+  otherPanelRef,
+  side,
+}: PanelToggleProps) {
+  const togglePanel = () => {
+    if (panelRef.current?.isCollapsed()) {
+      panelRef.current?.expand();
+      if (panelRef.current?.isCollapsed()) {
+        otherPanelRef.current?.collapse();
+        panelRef.current?.expand();
+      }
+    } else {
+      panelRef.current?.collapse();
+    }
+  };
   return (
     <Tooltip>
       <TooltipTrigger
         render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => {
-              const isCollapsed = panelRef.current?.isCollapsed();
-
-              if (isCollapsed) {
-                panelRef.current?.expand();
-              } else {
-                panelRef.current?.collapse();
-              }
-            }}
-          >
+          <Button variant="ghost" size="icon-sm" onClick={() => togglePanel()}>
             <HugeiconsIcon
               icon={
                 side === "left" ? LayoutAlignLeftIcon : LayoutAlignRightIcon

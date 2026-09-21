@@ -23,7 +23,11 @@ export default function TitleBar({
       className="flex w-full items-center justify-between select-none"
     >
       <div className="flex w-20 items-center gap-1 py-1 pl-1">
-        <PanelToggle side="left" panelRef={leftPanelRef} />
+        <PanelToggle
+          side="left"
+          panelRef={leftPanelRef}
+          otherPanelRef={rightPanelRef}
+        />
         <Separator orientation="vertical" className="my-auto h-3" />
         <TemporaryFileButton />
         <SaveButton />
@@ -33,7 +37,11 @@ export default function TitleBar({
         <div className="flex items-center gap-1 py-1">
           <SettingsButton />
           <Separator orientation="vertical" className="my-auto h-3" />
-          <PanelToggle side="right" panelRef={rightPanelRef} />
+          <PanelToggle
+            side="right"
+            panelRef={rightPanelRef}
+            otherPanelRef={leftPanelRef}
+          />
         </div>
         <WindowControls />
       </div>
