@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import SettingGroup from "../ui/setting-group";
 
-import { ConfirmDialog } from "@/components/base/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/ui/button";
 
 export default function ResetSettingGroup() {
   const [loading, setLoading] = useState(false);

@@ -2,10 +2,10 @@ import { Calendar01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
-import { Calendar } from "@/components/ui/calendar";
-import { InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
-import { PopoverContent } from "@/components/ui/popover";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/ui/calendar";
+import { InputGroupAddon, InputGroupButton } from "@/ui/input-group";
+import { PopoverContent } from "@/ui/popover";
+import { Popover, PopoverTrigger } from "@/ui/popover";
 
 type DateHelperProps = {
   onSelect: (formatedDate: string) => void;

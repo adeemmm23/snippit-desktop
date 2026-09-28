@@ -9,9 +9,10 @@ import { useState } from "react";
 
 import SettingGroup from "../ui/setting-group";
 
-import { ConfirmDialog } from "@/components/base/confirm-dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { useFilesStore } from "@/stores/files/files-store";
+import { Alert, AlertDescription, AlertTitle } from "@/ui/alert";
+import { Button } from "@/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +20,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useFilesStore } from "@/stores/files/files-store";
+} from "@/ui/dialog";
+import { Input } from "@/ui/input";
 
 type ActionDialogType = "delete" | "rename" | "create" | null;
 

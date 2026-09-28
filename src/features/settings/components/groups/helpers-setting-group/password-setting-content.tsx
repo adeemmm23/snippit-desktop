@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 
+import type { Helper } from "@/stores/settings/slices/helper-slice";
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import type { Helper } from "@/stores/settings/slices/helper-slice";
+} from "@/ui/dialog";
+import { Separator } from "@/ui/separator";
+import { Slider } from "@/ui/slider";
+import { Switch } from "@/ui/switch";
 
 type PasswordSettingContentProps = {
   options?: {

@@ -12,10 +12,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import FolderHeader from "./folder-header";
 import Node from "./node";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEditorStore } from "@/stores/editor/editor-store";
 import { useFilesStore } from "@/stores/files/files-store";
 import { isFile, isFolder } from "@/types/node.types";
+import { ScrollArea } from "@/ui/scroll-area";
 import { getNodeContent } from "@/utils/files.utils";
 
 export default function Tree() {

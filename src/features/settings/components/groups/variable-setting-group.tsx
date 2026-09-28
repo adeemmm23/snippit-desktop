@@ -1,5 +1,7 @@
 import SettingGroup from "../ui/setting-group";
 
+import { VARIABLE_FORMATS } from "@/constants/files.constants";
+import useSettingsStore from "@/stores/settings/settings-store";
 import {
   Select,
   SelectContent,
@@ -8,9 +10,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { VARIABLE_FORMATS } from "@/constants/files.constants";
-import useSettingsStore from "@/stores/settings/settings-store";
+} from "@/ui/select";
 
 export default function VariableSettingGroup() {
   const variableFormat = useSettingsStore((state) => state.variableFormat);

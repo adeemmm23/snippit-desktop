@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useFilesStore } from "@/stores/files/files-store";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -8,16 +9,15 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
+} from "@/ui/breadcrumb";
+import { Button } from "@/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useFilesStore } from "@/stores/files/files-store";
+} from "@/ui/dropdown-menu";
 
 export default function FilePath() {
   const activeFile = useFilesStore((state) => state.activeFile);

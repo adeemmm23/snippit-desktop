@@ -12,7 +12,7 @@ import {
   type Locale,
 } from "react-day-picker";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/ui/button";
 import { cn } from "@/utils/cn";
 
 function Calendar({

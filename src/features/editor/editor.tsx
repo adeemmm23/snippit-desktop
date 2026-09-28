@@ -7,7 +7,7 @@ import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
-} from "@/components/ui/resizable";
+} from "@/ui/resizable";
 
 export default function Editor() {
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({

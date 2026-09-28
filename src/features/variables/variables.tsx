@@ -4,10 +4,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import VariableInput from "./components/variable-input";
 import VariablesHeader from "./components/variables-header";
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { TUTORIAL } from "@/constants/test.constants";
 import { useEditorStore } from "@/stores/editor/editor-store";
+import { Button } from "@/ui/button";
+import { ScrollArea } from "@/ui/scroll-area";
 
 export default function Variables() {
   const variables = useEditorStore((state) => state.variables);

@@ -8,7 +8,9 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { IT_SUPPORT_SNIPPETS } from "@/constants/test.constants";
+import { useFilesStore } from "@/stores/files/files-store";
+import { Button } from "@/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,11 +26,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { IT_SUPPORT_SNIPPETS } from "@/constants/test.constants";
-import { useFilesStore } from "@/stores/files/files-store";
+} from "@/ui/dropdown-menu";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
 
 export default function Menu() {
   const createItem = useFilesStore((state) => state.createItem);

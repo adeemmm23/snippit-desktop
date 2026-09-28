@@ -1,8 +1,8 @@
 import SettingGroup from "../ui/setting-group";
 
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import useSettingsStore from "@/stores/settings/settings-store";
+import { Label } from "@/ui/label";
+import { Switch } from "@/ui/switch";
 
 export default function TooltipsGroup() {
   const tooltipsEnabled = useSettingsStore((state) => state.tooltipsEnabled);

@@ -5,17 +5,17 @@ import { useState } from "react";
 import FilePath from "./file-path";
 import ImportDialogFooter from "./import-dialog-footer";
 
-import { Button } from "@/components/ui/button";
+import { useFilesStore } from "@/stores/files/files-store";
+import { isFolder } from "@/types/node.types";
+import { Button } from "@/ui/button";
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { useFilesStore } from "@/stores/files/files-store";
-import { isFolder } from "@/types/node.types";
+} from "@/ui/dialog";
+import { ScrollArea } from "@/ui/scroll-area";
+import { Separator } from "@/ui/separator";
 import { getNodeContent } from "@/utils/files.utils";
 
 type FolderSelectorProps = {

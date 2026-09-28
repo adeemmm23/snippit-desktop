@@ -1,3 +1,4 @@
+import { useFilesStore } from "@/stores/files/files-store";
 import {
   Select,
   SelectContent,
@@ -6,8 +7,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useFilesStore } from "@/stores/files/files-store";
+} from "@/ui/select";
 
 export default function CollectionSelector() {
   const collections = useFilesStore((state) => state.collections);

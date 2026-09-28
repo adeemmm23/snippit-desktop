@@ -2,16 +2,16 @@ import { Add01Icon, Delete02Icon, Warning } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import type { Helper } from "@/stores/settings/slices/helper-slice";
+import { Alert, AlertDescription, AlertTitle } from "@/ui/alert";
+import { Button } from "@/ui/button";
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import type { Helper } from "@/stores/settings/slices/helper-slice";
+} from "@/ui/dialog";
+import { Input } from "@/ui/input";
 
 type SelectSettingContentProps = {
   options?: {

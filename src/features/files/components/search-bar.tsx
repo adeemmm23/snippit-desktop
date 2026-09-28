@@ -2,7 +2,10 @@ import { Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { useEditorStore } from "@/stores/editor/editor-store";
+import { useFilesStore } from "@/stores/files/files-store";
+import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import { Button } from "@/ui/button";
 import {
   Command,
   CommandDialog,
@@ -11,11 +14,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { useEditorStore } from "@/stores/editor/editor-store";
-import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+} from "@/ui/command";
+import { Kbd, KbdGroup } from "@/ui/kbd";
 
 export default function SearchBar() {
   const openedFiles = useFilesStore((state) => state.openedFiles);

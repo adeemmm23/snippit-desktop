@@ -2,15 +2,15 @@ import { ArrowRight, Close, FolderAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { useFilesStore } from "@/stores/files/files-store";
+import { Button } from "@/ui/button";
+import { DialogClose, DialogFooter } from "@/ui/dialog";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "@/components/ui/input-group";
-import { useFilesStore } from "@/stores/files/files-store";
+} from "@/ui/input-group";
 
 type ImportDialogFooterProps = {
   onSelect: () => void;

@@ -9,10 +9,12 @@ import PasswordSettingContent from "./password-setting-content";
 import SelectSettingContent from "./select-setting-content";
 import SettingGroup from "../../ui/setting-group";
 
-import { ConfirmDialog } from "@/components/base/confirm-dialog";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import useSettingsStore from "@/stores/settings/settings-store";
+import type { Helper, HelperType } from "@/stores/settings/slices/helper-slice";
+import { Button } from "@/ui/button";
+import { Dialog, DialogTrigger } from "@/ui/dialog";
+import { Input } from "@/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,9 +23,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import useSettingsStore from "@/stores/settings/settings-store";
-import type { Helper, HelperType } from "@/stores/settings/slices/helper-slice";
+} from "@/ui/select";
 
 export default function HelpersSettingGroup() {
   const helpers = useSettingsStore((state) => state.helpers);

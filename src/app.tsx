@@ -1,17 +1,17 @@
 import { useDefaultLayout, usePanelRef } from "react-resizable-panels";
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { Toaster } from "@/components/ui/sonner";
 import Editor from "@/features/editor";
 import Files from "@/features/files";
 import TitleBar from "@/features/titlebar";
 import Variables from "@/features/variables";
 import { useInit } from "@/hooks/use-init";
 import { useTheme } from "@/hooks/use-theme";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/ui/resizable";
+import { Toaster } from "@/ui/sonner";
 
 export default function App() {
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({

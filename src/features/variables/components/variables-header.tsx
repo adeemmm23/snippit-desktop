@@ -5,15 +5,11 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect } from "react";
 
-import { Button } from "@/components/ui/button";
-import { KbdGroup, Kbd } from "@/components/ui/kbd";
-import { Label } from "@/components/ui/label";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useEditorStore } from "@/stores/editor/editor-store";
+import { Button } from "@/ui/button";
+import { KbdGroup, Kbd } from "@/ui/kbd";
+import { Label } from "@/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 
 export default function VariablesHeader() {
   const resetVariables = useEditorStore((state) => state.resetVariables);

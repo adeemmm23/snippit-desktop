@@ -9,16 +9,16 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
-import { ConfirmDialog } from "@/components/base/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { useFilesStore } from "@/stores/files/files-store";
+import { Button } from "@/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useFilesStore } from "@/stores/files/files-store";
+} from "@/ui/dropdown-menu";
 import { cn } from "@/utils/cn";
 
 type NodeProps = {

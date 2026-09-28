@@ -4,14 +4,14 @@ import { useEffect, useRef } from "react";
 
 import Helper from "./helper";
 
+import { useEditorStore } from "@/stores/editor/editor-store";
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
   InputGroupButton,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { useEditorStore } from "@/stores/editor/editor-store";
+} from "@/ui/input-group";
+import { Label } from "@/ui/label";
 
 type VariableInputProps = {
   name: string;

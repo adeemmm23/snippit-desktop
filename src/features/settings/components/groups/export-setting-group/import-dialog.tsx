@@ -3,7 +3,11 @@ import { useState } from "react";
 import FolderSelector from "./folder-selector";
 import ImportFileDropzone from "./import-file-dropzone";
 
-import { Button } from "@/components/ui/button";
+import { VARIABLE_FORMATS } from "@/constants/files.constants";
+import { useFilesStore } from "@/stores/files/files-store";
+import useSettingsStore from "@/stores/settings/settings-store";
+import type { NodeType } from "@/types/node.types";
+import { Button } from "@/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+} from "@/ui/dialog";
+import { Label } from "@/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,11 +26,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { VARIABLE_FORMATS } from "@/constants/files.constants";
-import { useFilesStore } from "@/stores/files/files-store";
-import useSettingsStore from "@/stores/settings/settings-store";
-import type { NodeType } from "@/types/node.types";
+} from "@/ui/select";
 
 export default function ImportDialog() {
   const addFiles = useFilesStore((state) => state.addFiles);

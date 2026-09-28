@@ -2,14 +2,10 @@ import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef } from "react";
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useEditorStore } from "@/stores/editor/editor-store";
+import { Button } from "@/ui/button";
+import { ScrollArea } from "@/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 
 export function Input() {
   const template = useEditorStore((state) => state.template);

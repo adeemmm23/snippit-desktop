@@ -5,14 +5,10 @@ import { toast } from "sonner";
 
 import SaveIndicator from "./save-indicator";
 
-import { Button } from "@/components/ui/button";
-import { KbdGroup, Kbd } from "@/components/ui/kbd";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useFilesStore } from "@/stores/files/files-store";
+import { Button } from "@/ui/button";
+import { KbdGroup, Kbd } from "@/ui/kbd";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 
 export default function SaveButton() {
   const saveActiveFile = useFilesStore((state) => state.saveActiveFile);

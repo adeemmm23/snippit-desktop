@@ -1,6 +1,6 @@
 import { useSections } from "../context/sections-context";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/button";
 
 export default function SettingsNavigation() {
   const { sections, activeSection } = useSections();

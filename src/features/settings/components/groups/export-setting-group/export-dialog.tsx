@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { useFilesStore } from "@/stores/files/files-store";
+import useSettingsStore from "@/stores/settings/settings-store";
+import { Button } from "@/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/ui/dialog";
+import { Input } from "@/ui/input";
+import { Label } from "@/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,9 +22,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useFilesStore } from "@/stores/files/files-store";
-import useSettingsStore from "@/stores/settings/settings-store";
+} from "@/ui/select";
 
 export default function ExportDialog() {
   const collections = useFilesStore((state) => state.collections);

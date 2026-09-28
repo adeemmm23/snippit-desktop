@@ -3,10 +3,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 
-import { Calendar } from "@/components/ui/calendar";
-import { InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
-import { PopoverContent } from "@/components/ui/popover";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/ui/calendar";
+import { InputGroupAddon, InputGroupButton } from "@/ui/input-group";
+import { PopoverContent } from "@/ui/popover";
+import { Popover, PopoverTrigger } from "@/ui/popover";
 
 type RangeHelperProps = {
   onSelect: (formatedRange: string) => void;

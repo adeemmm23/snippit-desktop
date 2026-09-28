@@ -2,7 +2,7 @@ import React from "react";
 
 import SettingGroup from "../ui/setting-group";
 
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Kbd, KbdGroup } from "@/ui/kbd";
 
 export default function ShortcutsGroup() {
   const shortcuts = [

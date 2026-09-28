@@ -4,8 +4,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import Menu from "./menu";
 
-import { Button } from "@/components/ui/button";
 import { useFilesStore } from "@/stores/files/files-store";
+import { Button } from "@/ui/button";
 import { cn } from "@/utils/cn";
 
 export default function FolderHeader() {

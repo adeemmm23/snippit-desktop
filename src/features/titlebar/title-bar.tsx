@@ -7,7 +7,7 @@ import SettingsButton from "./components/settings-button";
 import TemporaryFileButton from "./components/temporary-file-button";
 import WindowControls from "./components/window-control";
 
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/ui/separator";
 
 type TitleBarProps = {
   leftPanelRef: ReturnType<typeof usePanelRef>;

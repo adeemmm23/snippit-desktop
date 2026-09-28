@@ -3,7 +3,7 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/ui/button";
 import { cn } from "@/utils/cn";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {

@@ -3,15 +3,11 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useEditorStore } from "@/stores/editor/editor-store";
+import { Button } from "@/ui/button";
+import { Kbd, KbdGroup } from "@/ui/kbd";
+import { ScrollArea } from "@/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 import { cn } from "@/utils/cn";
 
 export function Output() {

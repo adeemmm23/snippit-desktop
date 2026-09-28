@@ -11,7 +11,7 @@ import { useSections } from "../context/sections-context";
 import ExportGroup from "./groups/export-setting-group";
 import ResetSettingGroup from "./groups/reset-setting-group";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/ui/scroll-area";
 
 export default function SettingsSections() {
   const ref = useRef<HTMLElement | null>(null);

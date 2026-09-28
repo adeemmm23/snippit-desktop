@@ -1,7 +1,7 @@
 import { RefreshDotIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import { InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
+import { InputGroupAddon, InputGroupButton } from "@/ui/input-group";
 
 type PasswordHelperProps = {
   onGenerate: (generatedPassword: string) => void;
@@ -48,8 +48,8 @@ const generateRandomPassword = (
   numbers: boolean,
   specials: boolean,
 ) => {
-  const lowerCaseString = "abcdefghijklmnopqrstuvwxyz";
-  const upperCaseString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowerCaseString = "abcdefghijkmnopqrstuvwxyz";
+  const upperCaseString = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
   const numbersString = "0123456789";
   const specialsStrings = "!@#$%&*()_+}{[]:;?></-=";
 

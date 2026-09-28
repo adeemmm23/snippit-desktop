@@ -5,12 +5,8 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { usePanelRef } from "react-resizable-panels";
 
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Button } from "@/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 
 type PanelToggleProps = {
   panelRef: ReturnType<typeof usePanelRef>;

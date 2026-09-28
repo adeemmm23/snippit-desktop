@@ -8,8 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
+} from "@/ui/dropdown-menu";
+import { InputGroupAddon, InputGroupButton } from "@/ui/input-group";
 
 type SelectHelperProps = {
   onGenerate: (selectedValue: string) => void;
