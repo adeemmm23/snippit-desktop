@@ -3,6 +3,7 @@ import {
   ArrowLeft01Icon,
   Close,
   Copy01Icon,
+  Delete01Icon,
   Edit02Icon,
   Globe02Icon,
   Search,
@@ -185,6 +186,18 @@ function LinksPopoverContent() {
     });
   };
 
+  const handleDelete = () => {
+    if (!editingId) return;
+    setLinks(links.filter((link) => link.id !== editingId));
+
+    setNewTitle("");
+    setNewUrl("");
+    setNewTagInput("");
+    setNewTags(["Internet"]);
+    setEditingId(null);
+    setView("list");
+  };
+
   return (
     <PopoverContent className="flex h-100 w-80 flex-col gap-2 p-2">
       {view === "list" ? (
@@ -210,7 +223,6 @@ function LinksPopoverContent() {
             </InputGroupAddon>
           </InputGroup>
 
-          {/* Links List */}
           <ScrollArea className="min-h-0 flex-1 grow">
             <div className="flex flex-col gap-1">
               {filteredLinks.map((link) => {
@@ -268,7 +280,6 @@ function LinksPopoverContent() {
           </ScrollArea>
         </>
       ) : (
-        /* Add / Edit Link View Form */
         <form
           onSubmit={handleSaveLink}
           className="flex h-full flex-col justify-between"
@@ -283,10 +294,16 @@ function LinksPopoverContent() {
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
               </Button>
-              <span className="text-foreground/80 text-sm">
-                {view === "edit" ? "Edit Link" : "Add New Link"}
+              <span className="text-foreground/80 text-sm select-none">
+                {view === "edit" ? "Edit Link" : "Add Link"}
               </span>
-              <div className="size-8" />
+              {view === "edit" ? (
+                <Button size="icon-sm" variant="ghost" onClick={handleDelete}>
+                  <HugeiconsIcon icon={Delete01Icon} className="size-4" />
+                </Button>
+              ) : (
+                <div className="w-8" />
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="link-title">Title</Label>
@@ -340,8 +357,12 @@ function LinksPopoverContent() {
               </div>
             </div>
           </div>
-
-          <Button type="submit" size="sm" className="mt-4 w-full">
+          <Button
+            type="submit"
+            size="sm"
+            className="mt-4 w-full"
+            variant="outline"
+          >
             {view === "edit" ? "Save Changes" : "Save Link"}
           </Button>
         </form>
