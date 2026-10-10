@@ -6,7 +6,7 @@ import { Button } from "@/ui/button";
 import { Dialog, DialogTrigger } from "@/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 
-export default function SaveButton() {
+export default function SettingsButton() {
   return (
     <Dialog>
       <Tooltip>

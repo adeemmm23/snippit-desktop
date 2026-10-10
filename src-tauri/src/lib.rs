@@ -1,5 +1,4 @@
-use tauri_plugin_prevent_default::Flags;
-
+pub mod prevent_default;
 #[cfg(target_os = "windows")]
 mod windows_context_menu;
 
@@ -28,11 +27,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .plugin(
-            tauri_plugin_prevent_default::Builder::new()
-                .with_flags(Flags::all().difference(Flags::CONTEXT_MENU))
-                .build(),
-        )
+        .plugin(prevent_default::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
