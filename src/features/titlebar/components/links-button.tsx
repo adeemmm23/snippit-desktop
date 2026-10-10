@@ -5,6 +5,7 @@ import {
   Copy01Icon,
   Delete01Icon,
   Edit02Icon,
+  GhostIcon,
   Globe02Icon,
   Search,
 } from "@hugeicons/core-free-icons";
@@ -189,61 +190,68 @@ function LinksPopoverContent() {
             </InputGroupAddon>
           </InputGroup>
 
-          <ScrollArea className="min-h-0 flex-1 grow">
-            <div className="flex flex-col gap-1">
-              {filteredLinks.map((link) => {
-                let domain = "";
-                try {
-                  domain = new URL(link.url).hostname;
-                } catch {
-                  domain = link.url;
-                }
+          {filteredLinks.length != 0 ? (
+            <ScrollArea className="min-h-0 flex-1 grow">
+              <div className="flex flex-col gap-1">
+                {filteredLinks.map((link) => {
+                  let domain = "";
+                  try {
+                    domain = new URL(link.url).hostname;
+                  } catch {
+                    domain = link.url;
+                  }
 
-                return (
-                  <Item
-                    key={link.id}
-                    size="sm"
-                    className="hover:bg-input/10 group/item cursor-pointer flex-nowrap select-none"
-                    role="button"
-                    onClick={async () => {
-                      try {
-                        handleCopy(link.url);
-                      } catch (err) {
-                        console.error("Failed to copy to clipboard:", err);
-                      }
-                    }}
-                  >
-                    <ItemMedia>
-                      <img
-                        src={`https://${domain}/favicon.ico`}
-                        alt={`${link.title} favicon`}
-                        className="size-4 rounded-xs"
-                        onError={(e) => {
-                          e.currentTarget.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-                        }}
-                      />
-                    </ItemMedia>
-                    <ItemContent className="gap-0 overflow-hidden">
-                      <ItemTitle className="truncate">{link.title}</ItemTitle>
-                      <ItemDescription className="truncate">
-                        {link.url}
-                      </ItemDescription>
-                    </ItemContent>
-                    <ItemActions onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="opacity-0 group-hover/item:pointer-events-auto group-hover/item:opacity-100"
-                        onClick={() => openEditView(link)}
-                      >
-                        <HugeiconsIcon icon={Edit02Icon} className="size-4" />
-                      </Button>
-                    </ItemActions>
-                  </Item>
-                );
-              })}
+                  return (
+                    <Item
+                      key={link.id}
+                      size="sm"
+                      className="hover:bg-input/10 group/item cursor-pointer flex-nowrap select-none"
+                      role="button"
+                      onClick={async () => {
+                        try {
+                          handleCopy(link.url);
+                        } catch (err) {
+                          console.error("Failed to copy to clipboard:", err);
+                        }
+                      }}
+                    >
+                      <ItemMedia>
+                        <img
+                          src={`https://${domain}/favicon.ico`}
+                          alt={`${link.title} favicon`}
+                          className="size-4 rounded-xs"
+                          onError={(e) => {
+                            e.currentTarget.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+                          }}
+                        />
+                      </ItemMedia>
+                      <ItemContent className="gap-0 overflow-hidden">
+                        <ItemTitle className="truncate">{link.title}</ItemTitle>
+                        <ItemDescription className="truncate">
+                          {link.url}
+                        </ItemDescription>
+                      </ItemContent>
+                      <ItemActions onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="opacity-0 group-hover/item:pointer-events-auto group-hover/item:opacity-100"
+                          onClick={() => openEditView(link)}
+                        >
+                          <HugeiconsIcon icon={Edit02Icon} className="size-4" />
+                        </Button>
+                      </ItemActions>
+                    </Item>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="text-foreground/30 flex grow flex-col items-center justify-center gap-3 select-none">
+              <HugeiconsIcon icon={GhostIcon} className="size-20" />
+              <p>No link is found</p>
             </div>
-          </ScrollArea>
+          )}
         </>
       ) : (
         <form
