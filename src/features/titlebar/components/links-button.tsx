@@ -1,13 +1,17 @@
 import {
   Add01Icon,
   ArrowLeft01Icon,
+  Close,
+  Copy01Icon,
   Edit02Icon,
   Globe02Icon,
   Search,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
+import { toast } from "sonner";
 
+import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/ui/input-group";
@@ -28,22 +32,29 @@ interface LinkItem {
   id: string;
   title: string;
   url: string;
+  tags?: string[];
 }
 
 const INITIAL_LINKS: LinkItem[] = [
-  { id: "1", title: "Facebook", url: "https://www.facebook.com" },
-  { id: "2", title: "GitHub", url: "https://github.com" },
-  { id: "3", title: "YouTube", url: "https://www.youtdube.com" },
-  { id: "32", title: "X (Twitter)", url: "https://xd.com" },
-  { id: "32132", title: "GitHub", url: "https://gitzhub.com" },
-  { id: "2141", title: "YouTube", url: "https://www.yodzutube.com" },
-  { id: "42141", title: "X (Twitter)", url: "https://dzax.com" },
-  { id: "24343", title: "GitHub", url: "https://githudazb.com" },
-  { id: "324252", title: "YouTube", url: "https://www.youdzazdatube.com" },
-  { id: "53543", title: "X (Twitter)", url: "https://dzx.com" },
-  { id: "34634563", title: "GitHub", url: "https://githdadazub.com" },
-  { id: "534354", title: "YouTube", url: "https://www.youdazdatube.com" },
-  { id: "54345", title: "X (Twitter)", url: "https://xds.com" },
+  {
+    id: "1",
+    title: "Facebook",
+    url: "https://www.facebook.com",
+    tags: ["Social"],
+  },
+  {
+    id: "2",
+    title: "GitHub",
+    url: "https://github.com",
+    tags: ["Development"],
+  },
+  {
+    id: "3",
+    title: "YouTube",
+    url: "https://www.youtube.com",
+    tags: ["Video"],
+  },
+  { id: "32", title: "Twitter", url: "https://x.com", tags: ["Social"] },
 ];
 
 export default function LinksButton() {
@@ -71,20 +82,61 @@ export default function LinksButton() {
 }
 
 function LinksPopoverContent() {
-  const [view, setView] = useState<"list" | "add">("list");
+  const [view, setView] = useState<"list" | "add" | "edit">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [links, setLinks] = useState<LinkItem[]>(INITIAL_LINKS);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
+  const [newTagInput, setNewTagInput] = useState("");
+  const [newTags, setNewTags] = useState<string[]>(["Internet"]);
 
   const filteredLinks = links.filter(
     (link) =>
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      link.url.toLowerCase().includes(searchQuery.toLowerCase()),
+      link.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      link.tags?.some((tag) =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
   );
 
-  const handleAddLink = (e: React.FormEvent) => {
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && newTagInput.trim()) {
+      e.preventDefault();
+      if (newTags.length >= 3) return;
+      if (!newTags.includes(newTagInput.trim())) {
+        setNewTags([...newTags, newTagInput.trim()]);
+      }
+      setNewTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setNewTags(newTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const openAddView = () => {
+    setNewTitle(searchQuery);
+    setNewUrl(searchQuery.includes(".") ? searchQuery : "");
+    setNewTagInput("");
+    setNewTags(["Internet"]);
+    setEditingId(null);
+    setView("add");
+  };
+
+  const openEditView = (link: LinkItem) => {
+    setEditingId(link.id);
+    setNewTitle(link.title);
+    setNewUrl(link.url);
+    setNewTagInput("");
+    setNewTags(
+      link.tags && link.tags.length > 0 ? [...link.tags] : ["Internet"],
+    );
+    setView("edit");
+  };
+
+  const handleSaveLink = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newUrl.trim()) return;
 
@@ -92,34 +144,59 @@ function LinksPopoverContent() {
       ? newUrl
       : `https://${newUrl}`;
 
-    setLinks([
-      ...links,
-      {
-        id: Date.now().toString(),
-        title: newTitle.trim(),
-        url: formattedUrl,
-      },
-    ]);
+    if (view === "edit" && editingId) {
+      setLinks(
+        links.map((link) =>
+          link.id === editingId
+            ? {
+                ...link,
+                title: newTitle.trim(),
+                url: formattedUrl,
+                tags: newTags,
+              }
+            : link,
+        ),
+      );
+    } else {
+      setLinks([
+        ...links,
+        {
+          id: Date.now().toString(),
+          title: newTitle.trim(),
+          url: formattedUrl,
+          tags: newTags,
+        },
+      ]);
+    }
 
     setNewTitle("");
     setNewUrl("");
+    setNewTagInput("");
+    setNewTags(["Internet"]);
+    setEditingId(null);
     setView("list");
+  };
+
+  const handleCopy = async (link: string) => {
+    await navigator.clipboard.writeText(link);
+
+    toast.success("Copied successfully", {
+      icon: <HugeiconsIcon icon={Copy01Icon} className="size-4" />,
+    });
   };
 
   return (
     <PopoverContent className="flex h-100 w-80 flex-col gap-2 p-2">
       {view === "list" ? (
         <>
-          <InputGroup>
+          <InputGroup className="has-[[data-slot=input-group-control]:focus-visible]:border-border">
             <InputGroupInput
               placeholder="Search or add a link..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  setNewTitle(searchQuery);
-                  setNewUrl(searchQuery.includes(".") ? searchQuery : "");
-                  setView("add");
+                  openAddView();
                 }
               }}
             />
@@ -127,11 +204,7 @@ function LinksPopoverContent() {
               <HugeiconsIcon icon={Search} className="size-4" />
             </InputGroupAddon>
             <InputGroupAddon align="inline-end">
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => setView("add")}
-              >
+              <Button variant="ghost" size="icon-xs" onClick={openAddView}>
                 <HugeiconsIcon icon={Add01Icon} className="size-4" />
               </Button>
             </InputGroupAddon>
@@ -141,14 +214,26 @@ function LinksPopoverContent() {
           <ScrollArea className="min-h-0 flex-1 grow">
             <div className="flex flex-col gap-1">
               {filteredLinks.map((link) => {
-                const domain = new URL(link.url).hostname;
+                let domain = "";
+                try {
+                  domain = new URL(link.url).hostname;
+                } catch {
+                  domain = link.url;
+                }
+
                 return (
                   <Item
                     key={link.id}
                     size="sm"
-                    className="hover:bg-input/10 cursor-pointer flex-nowrap select-none"
+                    className="hover:bg-input/10 group/item cursor-pointer flex-nowrap select-none"
                     role="button"
-                    onClick={() => window.open(link.url, "_blank")}
+                    onClick={async () => {
+                      try {
+                        handleCopy(link.url);
+                      } catch (err) {
+                        console.error("Failed to copy to clipboard:", err);
+                      }
+                    }}
                   >
                     <ItemMedia>
                       <img
@@ -171,6 +256,7 @@ function LinksPopoverContent() {
                         variant="ghost"
                         size="icon-sm"
                         className="opacity-0 group-hover/item:pointer-events-auto group-hover/item:opacity-100"
+                        onClick={() => openEditView(link)}
                       >
                         <HugeiconsIcon icon={Edit02Icon} className="size-4" />
                       </Button>
@@ -182,12 +268,12 @@ function LinksPopoverContent() {
           </ScrollArea>
         </>
       ) : (
-        /* Add Link View Form using shadcn Input & Label */
+        /* Add / Edit Link View Form */
         <form
-          onSubmit={handleAddLink}
+          onSubmit={handleSaveLink}
           className="flex h-full flex-col justify-between"
         >
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <div className="flex h-9 items-center justify-between gap-2">
               <Button
                 type="button"
@@ -197,7 +283,9 @@ function LinksPopoverContent() {
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
               </Button>
-              <span className="text-foreground/80 text-sm">Add New Link</span>
+              <span className="text-foreground/80 text-sm">
+                {view === "edit" ? "Edit Link" : "Add New Link"}
+              </span>
               <div className="size-8" />
             </div>
             <div className="flex flex-col gap-2">
@@ -210,7 +298,6 @@ function LinksPopoverContent() {
                 autoFocus
               />
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="link-url">URL</Label>
               <Input
@@ -220,10 +307,42 @@ function LinksPopoverContent() {
                 onChange={(e) => setNewUrl(e.target.value)}
               />
             </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="tags">
+                  Tags {newTags.length >= 3 && "(Max 3 reached)"}
+                </Label>
+                <Input
+                  id="tags"
+                  placeholder={
+                    newTags.length >= 3
+                      ? "Max 3 tags allowed"
+                      : "Type and press Enter..."
+                  }
+                  value={newTagInput}
+                  onChange={(e) => setNewTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  disabled={newTags.length >= 3}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {newTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="ghost"
+                    className="bg-input/20 flex cursor-pointer items-center gap-1 select-none"
+                    onClick={() => handleRemoveTag(tag)}
+                  >
+                    {tag}
+                    <HugeiconsIcon icon={Close} className="size-3" />
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
 
           <Button type="submit" size="sm" className="mt-4 w-full">
-            Save Link
+            {view === "edit" ? "Save Changes" : "Save Link"}
           </Button>
         </form>
       )}
