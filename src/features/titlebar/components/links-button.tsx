@@ -12,6 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useLinksStore, type LinkItem } from "@/stores/links/links-store";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
@@ -28,35 +29,6 @@ import { Label } from "@/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { ScrollArea } from "@/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
-
-interface LinkItem {
-  id: string;
-  title: string;
-  url: string;
-  tags?: string[];
-}
-
-const INITIAL_LINKS: LinkItem[] = [
-  {
-    id: "1",
-    title: "Facebook",
-    url: "https://www.facebook.com",
-    tags: ["Social"],
-  },
-  {
-    id: "2",
-    title: "GitHub",
-    url: "https://github.com",
-    tags: ["Development"],
-  },
-  {
-    id: "3",
-    title: "YouTube",
-    url: "https://www.youtube.com",
-    tags: ["Video"],
-  },
-  { id: "32", title: "Twitter", url: "https://x.com", tags: ["Social"] },
-];
 
 export default function LinksButton() {
   return (
@@ -85,7 +57,12 @@ export default function LinksButton() {
 function LinksPopoverContent() {
   const [view, setView] = useState<"list" | "add" | "edit">("list");
   const [searchQuery, setSearchQuery] = useState("");
-  const [links, setLinks] = useState<LinkItem[]>(INITIAL_LINKS);
+
+  const links = useLinksStore((state) => state.links);
+  const addLink = useLinksStore((state) => state.addLink);
+  const editLink = useLinksStore((state) => state.editLink);
+  const removeLink = useLinksStore((state) => state.removeLink);
+
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [newTitle, setNewTitle] = useState("");
@@ -126,7 +103,7 @@ function LinksPopoverContent() {
     setView("add");
   };
 
-  const openEditView = (link: LinkItem) => {
+  const openEditView = (link: LinkItem & { id: string }) => {
     setEditingId(link.id);
     setNewTitle(link.title);
     setNewUrl(link.url);
@@ -146,28 +123,17 @@ function LinksPopoverContent() {
       : `https://${newUrl}`;
 
     if (view === "edit" && editingId) {
-      setLinks(
-        links.map((link) =>
-          link.id === editingId
-            ? {
-                ...link,
-                title: newTitle.trim(),
-                url: formattedUrl,
-                tags: newTags,
-              }
-            : link,
-        ),
-      );
+      editLink(editingId, {
+        title: newTitle.trim(),
+        url: formattedUrl,
+        tags: newTags,
+      });
     } else {
-      setLinks([
-        ...links,
-        {
-          id: Date.now().toString(),
-          title: newTitle.trim(),
-          url: formattedUrl,
-          tags: newTags,
-        },
-      ]);
+      addLink({
+        title: newTitle.trim(),
+        url: formattedUrl,
+        tags: newTags,
+      });
     }
 
     setNewTitle("");
@@ -188,7 +154,7 @@ function LinksPopoverContent() {
 
   const handleDelete = () => {
     if (!editingId) return;
-    setLinks(links.filter((link) => link.id !== editingId));
+    removeLink(editingId);
 
     setNewTitle("");
     setNewUrl("");
@@ -298,7 +264,12 @@ function LinksPopoverContent() {
                 {view === "edit" ? "Edit Link" : "Add Link"}
               </span>
               {view === "edit" ? (
-                <Button size="icon-sm" variant="ghost" onClick={handleDelete}>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={handleDelete}
+                >
                   <HugeiconsIcon icon={Delete01Icon} className="size-4" />
                 </Button>
               ) : (
