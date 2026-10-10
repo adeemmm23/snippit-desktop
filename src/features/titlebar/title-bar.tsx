@@ -1,6 +1,7 @@
 import type { usePanelRef } from "react-resizable-panels";
 
 import FilePath from "./components/file-path";
+import LinksButton from "./components/links-button";
 import PanelToggle from "./components/panel-toggle";
 import SaveButton from "./components/save-button";
 import SettingsButton from "./components/settings-button";
@@ -35,6 +36,7 @@ export default function TitleBar({
       <FilePath />
       <div className="flex h-full w-20 items-center justify-end gap-1">
         <div className="flex items-center gap-1 py-1">
+          <LinksButton />
           <SettingsButton />
           <Separator orientation="vertical" className="my-auto h-3" />
           <PanelToggle
