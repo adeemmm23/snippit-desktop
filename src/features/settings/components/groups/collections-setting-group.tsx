@@ -25,9 +25,6 @@ import { Input } from "@/ui/input";
 
 type ActionDialogType = "delete" | "rename" | "create" | null;
 
-// TODO: handle span overflow
-// TODO: fix closing animation comes with default values
-// TODO: use input instead of div and a rename dialog
 export default function CollectionsSettingGroup() {
   const collections = useFilesStore((state) => state.collections);
   const createCollection = useFilesStore((state) => state.createCollection);
@@ -35,24 +32,29 @@ export default function CollectionsSettingGroup() {
   const renameCollection = useFilesStore((state) => state.renameCollection);
 
   const [actionDialog, setActionDialog] = useState<ActionDialogType>(null);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(
-    null,
-  );
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
   const [newName, setNewName] = useState("");
 
+  // Find the active collection object based on ID
+  const selectedCollection = collections.find(
+    (c) => c.id === selectedCollectionId,
+  );
+
   const handleDelete = () => {
-    if (selectedCollection) {
-      deleteCollection(selectedCollection);
+    if (selectedCollectionId) {
+      deleteCollection(selectedCollectionId);
       setActionDialog(null);
-      setSelectedCollection(null);
+      setSelectedCollectionId(null);
     }
   };
 
   const handleRename = () => {
-    if (selectedCollection && newName.trim()) {
-      renameCollection(selectedCollection, newName.trim());
+    if (selectedCollectionId && newName.trim()) {
+      renameCollection(selectedCollectionId, newName.trim());
       setActionDialog(null);
-      setSelectedCollection(null);
+      setSelectedCollectionId(null);
       setNewName("");
     }
   };
@@ -65,14 +67,14 @@ export default function CollectionsSettingGroup() {
     }
   };
 
-  const openDeleteDialog = (collectionName: string) => {
-    setSelectedCollection(collectionName);
+  const openDeleteDialog = (id: string) => {
+    setSelectedCollectionId(id);
     setActionDialog("delete");
   };
 
-  const openRenameDialog = (collectionName: string) => {
-    setSelectedCollection(collectionName);
-    setNewName(collectionName);
+  const openRenameDialog = (id: string, name: string) => {
+    setSelectedCollectionId(id);
+    setNewName(name);
     setActionDialog("rename");
   };
 
@@ -94,24 +96,23 @@ export default function CollectionsSettingGroup() {
         ) : (
           <div className="space-y-2">
             {collections.map((collection) => (
-              <div className="flex gap-2">
-                <div
-                  key={collection.name}
-                  className="border-border bg-background dark:bg-input/30 dark:border-input flex h-9 max-w-60 grow items-center justify-between rounded-md border px-2.5 shadow-xs"
-                >
+              <div key={collection.id} className="flex gap-2">
+                <div className="border-border bg-background dark:bg-input/30 dark:border-input flex h-9 max-w-60 grow items-center justify-between rounded-md border px-2.5 shadow-xs">
                   <span className="text-sm">{collection.name}</span>
                 </div>
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => openRenameDialog(collection.name)}
+                  onClick={() =>
+                    openRenameDialog(collection.id, collection.name)
+                  }
                 >
                   <HugeiconsIcon icon={InputCursorTextIcon} />
                 </Button>
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => openDeleteDialog(collection.name)}
+                  onClick={() => openDeleteDialog(collection.id)}
                 >
                   <HugeiconsIcon icon={Delete02Icon} />
                 </Button>
@@ -183,7 +184,7 @@ export default function CollectionsSettingGroup() {
         onOpenChange={(open) => {
           if (!open) {
             setActionDialog(null);
-            setSelectedCollection(null);
+            setSelectedCollectionId(null);
             setNewName("");
           }
         }}
@@ -192,7 +193,7 @@ export default function CollectionsSettingGroup() {
           <DialogHeader>
             <DialogTitle>Rename Collection</DialogTitle>
             <DialogDescription>
-              Enter a new name for "{selectedCollection}".
+              Enter a new name for "{selectedCollection?.name}".
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
@@ -213,7 +214,7 @@ export default function CollectionsSettingGroup() {
               variant="outline"
               onClick={() => {
                 setActionDialog(null);
-                setSelectedCollection(null);
+                setSelectedCollectionId(null);
                 setNewName("");
               }}
             >
@@ -232,11 +233,11 @@ export default function CollectionsSettingGroup() {
         onOpenChange={(open) => {
           if (!open) {
             setActionDialog(null);
-            setSelectedCollection(null);
+            setSelectedCollectionId(null);
           }
         }}
         title="Delete Collection"
-        description={`Deleting "${selectedCollection}" will remove all files in this collection.`}
+        description={`Deleting "${selectedCollection?.name}" will remove all files in this collection.`}
         additionalContent={
           collections.length <= 1 ? (
             <Alert>

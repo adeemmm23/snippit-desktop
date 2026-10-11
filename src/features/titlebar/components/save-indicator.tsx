@@ -7,8 +7,7 @@ export default function SaveIndicator() {
   const activeFilePath = useFilesStore((state) => state.activeFile);
   const collections = useFilesStore((state) => state.collections);
   const activeCollection = useFilesStore((state) => state.activeCollection);
-  const files =
-    collections.find((c) => c.name === activeCollection)?.files || [];
+  const files = collections.find((c) => c.id === activeCollection)?.files || [];
 
   const node = getNodeContent(activeFilePath, files);
   const template = useEditorStore((state) => state.template);

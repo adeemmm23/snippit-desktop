@@ -16,7 +16,7 @@ export default function CollectionSelector() {
     (state) => state.setActiveCollection,
   );
   const items = collections.map((collection) => ({
-    value: collection.name,
+    value: collection.id,
     label: collection.name,
   }));
 

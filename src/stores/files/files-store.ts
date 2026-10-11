@@ -5,13 +5,13 @@ import { deepClone, getAvailableName, isDeepEqual } from "./utils";
 import { useEditorStore } from "../editor/editor-store";
 import { fsStorage } from "../storage";
 
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import {
+  isFile,
+  isFolder,
+  type Collection,
+  type NodeType,
+} from "@/types/node.types";
 import { getNodeContent } from "@/utils/files.utils";
-
-type Collection = {
-  name: string;
-  files: NodeType[];
-};
 
 type FilesStore = {
   collections: Collection[];
@@ -20,10 +20,10 @@ type FilesStore = {
   currenFolder: string[];
   openedFiles: { path: string[]; count: number; openedAt: number }[];
   setFiles: (files: NodeType[]) => void;
-  setActiveCollection: (name: string) => void;
+  setActiveCollection: (id: string) => void;
   createCollection: (name: string) => void;
-  deleteCollection: (name: string) => void;
-  renameCollection: (oldName: string, newName: string) => void;
+  deleteCollection: (id: string) => void;
+  renameCollection: (id: string, name: string) => void;
   setActiveFile: (path: string[]) => void;
   setCurrentFolder: (path: string[]) => void;
   addFiles: (
@@ -48,11 +48,12 @@ export const useFilesStore = create<FilesStore>()(
     (set, get) => ({
       collections: [
         {
+          id: "0",
           name: "Default",
           files: [],
         },
       ],
-      activeCollection: "Default",
+      activeCollection: "0",
       activeFile: [],
       currenFolder: [],
       openedFiles: [],
@@ -60,7 +61,7 @@ export const useFilesStore = create<FilesStore>()(
         const { activeCollection, collections } = get();
 
         const updatedCollections = collections.map((collection) => {
-          if (collection.name === activeCollection) {
+          if (collection.id === activeCollection) {
             return { ...collection, files };
           }
           return collection;
@@ -68,15 +69,15 @@ export const useFilesStore = create<FilesStore>()(
 
         set({ collections: updatedCollections });
       },
-      setActiveCollection: (name) => {
+      setActiveCollection: (id) => {
         const { collections } = get();
-        if (!collections.some((c) => c.name === name)) {
+        if (!collections.some((c) => c.id === id)) {
           return;
         }
         const setTemplate = useEditorStore.getState().setTemplate;
         setTemplate("");
         set({
-          activeCollection: name,
+          activeCollection: id,
           activeFile: [],
           currenFolder: [],
           openedFiles: [],
@@ -85,65 +86,58 @@ export const useFilesStore = create<FilesStore>()(
       createCollection: (name) => {
         const { collections } = get();
 
-        if (collections.some((c) => c.name === name)) {
+        if (collections.some((c) => c.id === name)) {
           return;
         }
+
+        const now = Date.now().toString();
 
         set({
-          collections: [...collections, { name, files: [] }],
-          activeCollection: name,
+          collections: [...collections, { id: now, name, files: [] }],
+          activeCollection: now,
         });
       },
-      deleteCollection: (name) => {
+      deleteCollection: (id) => {
         const { collections, activeCollection } = get();
 
-        const updatedCollections = collections.filter((c) => c.name !== name);
+        const updatedCollections = collections.filter((c) => c.id !== id);
 
-        if (updatedCollections.length === 0) {
-          set({
-            collections: updatedCollections,
-            activeCollection: "",
-            activeFile: [],
-            currenFolder: [],
-            openedFiles: [],
-          });
-          return;
-        }
-
-        let newActiveCollection = activeCollection;
-        if (activeCollection === name) {
-          newActiveCollection = updatedCollections[0].name;
+        if (activeCollection === id) {
           const setTemplate = useEditorStore.getState().setTemplate;
           setTemplate("");
         }
 
         set({
-          collections: updatedCollections,
-          activeCollection: newActiveCollection,
-          ...(activeCollection === name && {
+          collections:
+            updatedCollections.length != 0
+              ? updatedCollections
+              : [
+                  {
+                    id: "0",
+                    name: "Default",
+                    files: [],
+                  },
+                ],
+          activeCollection:
+            activeCollection === id
+              ? updatedCollections[0].id
+              : activeCollection,
+          ...(activeCollection === id && {
             activeFile: [],
             currenFolder: [],
             openedFiles: [],
           }),
         });
       },
-      renameCollection: (oldName, newName) => {
+      renameCollection: (id, name) => {
         const { collections } = get();
 
-        if (collections.some((c) => c.name === newName)) {
-          return;
-        }
-
         const updatedCollections = collections.map((c) =>
-          c.name === oldName ? { ...c, name: newName } : c,
+          c.id === id ? { ...c, name: name } : c,
         );
 
         set({
           collections: updatedCollections,
-          activeCollection:
-            get().activeCollection === oldName
-              ? newName
-              : get().activeCollection,
         });
       },
       setActiveFile: (activeFilePath) => {
@@ -182,7 +176,7 @@ export const useFilesStore = create<FilesStore>()(
         const { collections, activeCollection } = get();
         const files =
           collections.find(
-            (c) => c.name === (selecteCollection ?? activeCollection),
+            (c) => c.id === (selecteCollection ?? activeCollection),
           )?.files || [];
         const updatedFiles = deepClone(files);
 
@@ -207,7 +201,7 @@ export const useFilesStore = create<FilesStore>()(
         const { activeFile, collections, activeCollection } = get();
 
         const files =
-          collections.find((c) => c.name === activeCollection)?.files || [];
+          collections.find((c) => c.id === activeCollection)?.files || [];
 
         const template = useEditorStore.getState().template;
 
@@ -224,7 +218,7 @@ export const useFilesStore = create<FilesStore>()(
         node.content = template;
 
         const updatedCollections = collections.map((collection) => {
-          if (collection.name === activeCollection) {
+          if (collection.id === activeCollection) {
             return { ...collection, files: newFiles };
           }
           return collection;
@@ -237,7 +231,7 @@ export const useFilesStore = create<FilesStore>()(
         const { collections, activeCollection } = get();
         const files =
           collections.find(
-            (c) => c.name === (selecteCollection ?? activeCollection),
+            (c) => c.id === (selecteCollection ?? activeCollection),
           )?.files || [];
 
         console.log("createItem", path, type, content, selecteCollection);
@@ -249,16 +243,20 @@ export const useFilesStore = create<FilesStore>()(
 
         const finalName = getAvailableName(parent, name);
 
+        const now = Date.now().toString();
+
         let newNode: NodeType;
 
         if (type === "file") {
           newNode = {
+            id: now,
             type: "file",
             name: finalName,
             content: content || "",
           };
         } else {
           newNode = {
+            id: now,
             type: "folder",
             name: finalName,
             files: [],
@@ -268,7 +266,7 @@ export const useFilesStore = create<FilesStore>()(
         parent.push(newNode);
 
         const updatedCollections = collections.map((collection) => {
-          if (collection.name === (selecteCollection ?? activeCollection)) {
+          if (collection.id === (selecteCollection ?? activeCollection)) {
             return { ...collection, files: newFiles };
           }
           return collection;
@@ -279,7 +277,7 @@ export const useFilesStore = create<FilesStore>()(
       removeItem: (path) => {
         const { activeCollection, collections, openedFiles } = get();
         const files =
-          collections.find((c) => c.name === activeCollection)?.files || [];
+          collections.find((c) => c.id === activeCollection)?.files || [];
         const newFiles = deepClone(files);
         const node = getNodeContent(path.slice(0, -1), newFiles);
         const parent = node && isFolder(node) ? node.files : newFiles;
@@ -318,7 +316,7 @@ export const useFilesStore = create<FilesStore>()(
         });
 
         const updatedCollections = collections.map((collection) => {
-          if (collection.name === activeCollection) {
+          if (collection.id === activeCollection) {
             return { ...collection, files: newFiles };
           }
           return collection;
@@ -329,7 +327,7 @@ export const useFilesStore = create<FilesStore>()(
         const { activeCollection, collections, activeFile, openedFiles } =
           get();
         const files =
-          collections.find((c) => c.name === activeCollection)?.files || [];
+          collections.find((c) => c.id === activeCollection)?.files || [];
         const newFiles = deepClone(files);
         const node = getNodeContent(oldPath, newFiles);
 
@@ -395,7 +393,7 @@ export const useFilesStore = create<FilesStore>()(
         });
 
         const updatedCollections = collections.map((collection) => {
-          if (collection.name === activeCollection) {
+          if (collection.id === activeCollection) {
             return { ...collection, files: newFiles };
           }
           return collection;

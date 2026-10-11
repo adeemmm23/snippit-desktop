@@ -24,8 +24,7 @@ export default function Tree() {
   const activeFilePath = useFilesStore((state) => state.activeFile);
   const collections = useFilesStore((state) => state.collections);
   const activeCollection = useFilesStore((state) => state.activeCollection);
-  const data =
-    collections.find((c) => c.name === activeCollection)?.files || [];
+  const data = collections.find((c) => c.id === activeCollection)?.files || [];
   const currentWorkingFolder = useFilesStore((state) => state.currenFolder);
   const setCurrentWorkingFolder = useFilesStore(
     (state) => state.setCurrentFolder,

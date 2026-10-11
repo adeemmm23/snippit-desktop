@@ -21,8 +21,7 @@ export default function SearchBar() {
   const openedFiles = useFilesStore((state) => state.openedFiles);
   const collections = useFilesStore((state) => state.collections);
   const activeCollection = useFilesStore((state) => state.activeCollection);
-  const files =
-    collections.find((c) => c.name === activeCollection)?.files || [];
+  const files = collections.find((c) => c.id === activeCollection)?.files || [];
 
   const [open, setOpen] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");

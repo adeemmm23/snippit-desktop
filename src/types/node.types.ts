@@ -1,10 +1,18 @@
+export type Collection = {
+  id: string;
+  name: string;
+  files: NodeType[];
+};
+
 export type FileType = {
+  id: string;
   type: "file";
   name: string;
   content: string;
 };
 
 export type FolderType = {
+  id: string;
   type: "folder";
   name: string;
   files: NodeType[];
