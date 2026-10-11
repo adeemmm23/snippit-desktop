@@ -115,7 +115,7 @@ function LinksPopoverContent() {
     setView("edit");
   };
 
-  const handleSaveLink = (e: React.FormEvent) => {
+  const handleSaveLink = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newUrl.trim()) return;
 
@@ -216,14 +216,7 @@ function LinksPopoverContent() {
                       }}
                     >
                       <ItemMedia>
-                        <img
-                          src={`https://${domain}/favicon.ico`}
-                          alt={`${link.title} favicon`}
-                          className="size-4 rounded-xs"
-                          onError={(e) => {
-                            e.currentTarget.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-                          }}
-                        />
+                        <Favicon id={link.id} title={link.title} url={domain} />
                       </ItemMedia>
                       <ItemContent className="gap-0 overflow-hidden">
                         <ItemTitle className="truncate">{link.title}</ItemTitle>
@@ -347,5 +340,20 @@ function LinksPopoverContent() {
         </form>
       )}
     </PopoverContent>
+  );
+}
+
+function Favicon({ title, url }: LinkItem) {
+  const [source, setSource] = useState<string>(`https://${url}/favicon.ico`);
+  return (
+    <img
+      src={source}
+      alt={`${title} favicon`}
+      className="size-4 rounded-xs"
+      draggable="false"
+      onError={() => {
+        setSource(`https://www.google.com/s2/favicons?domain=${url}&sz=32`);
+      }}
+    />
   );
 }

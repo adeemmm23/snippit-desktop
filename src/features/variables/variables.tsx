@@ -17,7 +17,10 @@ export default function Variables() {
 
   // TODO: fix layout here
   return (
-    <div className="border-border flex h-full min-w-48 grow flex-col gap-2 rounded-md rounded-r-none border border-r-0 py-2">
+    <div
+      className="border-border flex h-full min-w-48 grow flex-col gap-2 rounded-md rounded-r-none border border-r-0 py-2"
+      data-tauri-drag-region
+    >
       {!isVariables ? (
         <>
           <VariablesHeader />
@@ -38,10 +41,7 @@ export default function Variables() {
           </ScrollArea>
         </>
       ) : (
-        <div
-          className="text-muted-foreground my-auto py-8 text-center"
-          data-tauri-drag-region
-        >
+        <div className="text-muted-foreground my-auto py-8 text-center select-none">
           <div className="bg-muted mb-4 inline-flex items-center justify-center rounded-sm p-2">
             <HugeiconsIcon icon={ThreeDViewIcon} className="size-5" />
           </div>
