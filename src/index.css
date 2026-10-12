@@ -152,4 +152,22 @@
   [data-dnd-overlay]:not([style*="--dnd-translate"]) {
     display: none;
   }
+
+  input[type="number"] {
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 6s linear infinite;
+  }
 }

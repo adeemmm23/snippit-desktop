@@ -46,8 +46,8 @@ export default function VariableInput({
   }, [index]);
 
   return (
-    <div className="flex w-full flex-col gap-1">
-      <Label htmlFor={name} className="mb-2 flex items-center gap-2 px-2">
+    <div className="flex w-full flex-col gap-2">
+      <Label htmlFor={name} className="px-2">
         {name}
       </Label>
       <InputGroup>

@@ -10,6 +10,7 @@ import SettingSection from "./ui/setting-section";
 import { useSections } from "../context/sections-context";
 import ExportGroup from "./groups/export-setting-group";
 import ResetSettingGroup from "./groups/reset-setting-group";
+import TimerSettingGroup from "./groups/timer-setting-group";
 
 import { ScrollArea } from "@/ui/scroll-area";
 
@@ -66,6 +67,7 @@ export default function SettingsSections() {
           <SettingSection title="Editor">
             <VariableSettingGroup />
             <HelpersSettingGroup />
+            <TimerSettingGroup />
           </SettingSection>
           <SettingSection title="Shortcuts">
             <TooltipsGroup />
