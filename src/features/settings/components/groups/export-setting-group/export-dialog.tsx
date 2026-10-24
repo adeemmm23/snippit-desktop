@@ -1,3 +1,5 @@
+import { save } from "@tauri-apps/plugin-dialog"; // Tauri v2 dialog plugin
+import { writeTextFile } from "@tauri-apps/plugin-fs"; // Tauri v2 fs plugin
 import { useMemo, useState } from "react";
 
 import { useFilesStore } from "@/stores/files/files-store";
@@ -27,7 +29,7 @@ import {
 export default function ExportDialog() {
   const collections = useFilesStore((state) => state.collections);
   const collectionsList = collections.map((collection) => ({
-    value: collection.name,
+    value: collection.id,
     label: collection.name,
   }));
 
@@ -37,7 +39,7 @@ export default function ExportDialog() {
     useState(activeCollection);
 
   const files =
-    collections.find((c) => c.name === selectedCollection)?.files || [];
+    collections.find((c) => c.id === selectedCollection)?.files || [];
 
   const variableFormat = useSettingsStore((state) => state.variableFormat);
 
@@ -52,21 +54,39 @@ export default function ExportDialog() {
 
   const canConfirmExport = sanitizedExportFileName.length > 0;
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!canConfirmExport) return;
 
-    const data = {
-      files,
-      variableFormat,
-    };
-    const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`;
-    const downloadAnchorNode = document.createElement("a");
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", sanitizedExportFileName);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    setExportOpen(false);
+    try {
+      // 1. Open Tauri's native OS save dialog
+      const filePath = await save({
+        defaultPath: sanitizedExportFileName,
+        filters: [
+          {
+            name: "JSON Files",
+            extensions: ["json"],
+          },
+        ],
+      });
+
+      // If the user cancels the dialog, filePath will be null
+      if (!filePath) return;
+
+      // 2. Prepare the payload string
+      const data = {
+        files,
+        variableFormat,
+      };
+      const fileContent = JSON.stringify(data, null, 2); // Pretty-printed JSON is usually best for exports
+
+      // 3. Write text content directly to the chosen path using the fs plugin
+      await writeTextFile(filePath, fileContent);
+
+      // 4. Close the dialog cleanly
+      setExportOpen(false);
+    } catch (error) {
+      console.error("Failed to export file:", error);
+    }
   };
 
   return (
@@ -93,7 +113,7 @@ export default function ExportDialog() {
             <SelectGroup>
               <SelectLabel>Collections</SelectLabel>
               {collections.map((item) => (
-                <SelectItem key={item.name} value={item.name}>
+                <SelectItem key={item.id} value={item.id}>
                   {item.name}
                 </SelectItem>
               ))}

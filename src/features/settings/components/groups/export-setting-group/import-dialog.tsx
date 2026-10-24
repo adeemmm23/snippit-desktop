@@ -34,7 +34,7 @@ export default function ImportDialog() {
 
   const collections = useFilesStore((state) => state.collections);
   const collectionsList = collections.map((collection) => ({
-    value: collection.name,
+    value: collection.id,
     label: collection.name,
   }));
   const activeCollection = useFilesStore((state) => state.activeCollection);
@@ -70,6 +70,9 @@ export default function ImportDialog() {
             variableFormat,
           );
         }
+
+        console.log("Imported files:", fixedFiles);
+
         addFiles(fixedFiles, importFolderPath, selectedCollection);
         setImportOpen(false);
         setImportFile(null);
@@ -125,7 +128,7 @@ export default function ImportDialog() {
                 <SelectGroup>
                   <SelectLabel>Collections</SelectLabel>
                   {collections.map((item) => (
-                    <SelectItem key={item.name} value={item.name}>
+                    <SelectItem key={item.id} value={item.id}>
                       {item.name}
                     </SelectItem>
                   ))}

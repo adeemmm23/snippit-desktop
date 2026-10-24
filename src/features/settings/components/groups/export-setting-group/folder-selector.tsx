@@ -29,7 +29,7 @@ export default function FolderSelector({
 }: FolderSelectorProps) {
   const collections = useFilesStore((state) => state.collections);
   const files =
-    collections.find((c) => c.name === selectedCollection)?.files || [];
+    collections.find((c) => c.id === selectedCollection)?.files || [];
 
   const [path, setPath] = useState<string[]>([]);
   const [selectedPath, setSelectedPath] = useState<string[]>([]);

@@ -178,6 +178,7 @@ export const useFilesStore = create<FilesStore>()(
           collections.find(
             (c) => c.id === (selecteCollection ?? activeCollection),
           )?.files || [];
+
         const updatedFiles = deepClone(files);
 
         const node = getNodeContent(path, updatedFiles);
@@ -189,7 +190,7 @@ export const useFilesStore = create<FilesStore>()(
         }
 
         const updatedCollections = collections.map((collection) => {
-          if (collection.name === (selecteCollection ?? activeCollection)) {
+          if (collection.id === (selecteCollection ?? activeCollection)) {
             return { ...collection, files: updatedFiles };
           }
           return collection;

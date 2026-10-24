@@ -48,7 +48,6 @@ export default function ImportDialogFooter({
             ref={inputRef}
             placeholder="New folder name"
             onKeyDown={(e) => {
-              e.preventDefault();
               if (e.key === "Enter") {
                 handleCreateFolder();
               }

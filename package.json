@@ -1,6 +1,6 @@
 {
   "name": "snippit",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "@hugeicons/react": "^1.1.10",
     "@tauri-apps/api": "^2.12.2",
     "@tauri-apps/plugin-clipboard-manager": "^2.4.1",
+    "@tauri-apps/plugin-dialog": "^2.8.3",
     "@tauri-apps/plugin-fs": "v2.7.0",
     "@tauri-apps/plugin-opener": "v2.7.1",
     "class-variance-authority": "^0.7.1",
