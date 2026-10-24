@@ -78,7 +78,7 @@ export default function FilePath() {
     );
   }
 
-  const showParent = viewMode === "full" && activeFile.length > 2;
+  const showParent = viewMode === "full" && activeFile.length > 1;
   const parenFolder = showParent ? activeFile[activeFile.length - 2] : null;
 
   const dropdownLimit =
