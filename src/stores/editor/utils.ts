@@ -20,13 +20,18 @@ export const extractParts: ExtractPartsFunction = ({
   regexLabel,
   regexValue,
 }) => {
+  const variableRegex = `?:${regexValue.source}`;
+  const commentRegex = "?:#!([\\s\\S]*?)!#";
+
   const newVariables: Record<string, string> = {};
   const newParts: Part[] = [];
+
+  const combinedRegex = new RegExp(`(${variableRegex})|(${commentRegex})`, "g");
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = regexValue.exec(template)) !== null) {
+  while ((match = combinedRegex.exec(template)) !== null) {
     if (match.index > lastIndex) {
       newParts.push({
         type: "text",
@@ -35,18 +40,27 @@ export const extractParts: ExtractPartsFunction = ({
     }
 
     const variableName = match[1];
-    newVariables[variableName] = variables[variableName] || "";
-    const variableText =
-      newVariables[variableName] == ""
-        ? regexLabel.replace("variable", variableName)
-        : newVariables[variableName];
+    const commentText = match[2];
 
-    newParts.push({
-      type: "variable",
-      text: variableText,
-    });
+    if (variableName !== undefined) {
+      newVariables[variableName] = variables[variableName] || "";
+      const variableText =
+        newVariables[variableName] === ""
+          ? regexLabel.replace("variable", variableName)
+          : newVariables[variableName];
 
-    lastIndex = regexValue.lastIndex;
+      newParts.push({
+        type: "variable",
+        text: variableText,
+      });
+    } else if (commentText !== undefined) {
+      newParts.push({
+        type: "comment",
+        text: commentText.trim(),
+      });
+    }
+
+    lastIndex = combinedRegex.lastIndex;
   }
 
   if (lastIndex < template.length) {

@@ -15,7 +15,12 @@ export function Output() {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (isShortcut: boolean | undefined = false) => {
-    const output = parts.map((part) => part.text).join("");
+    const output = parts
+      .filter((part) => part.type !== "comment")
+      .map((part) => part.text)
+      .join("")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
     await navigator.clipboard.writeText(output);
 
     if (!isShortcut) {
@@ -79,6 +84,8 @@ export function Output() {
               className={cn(
                 part.type == "variable" &&
                   "dark:text-primary text-primary-foreground",
+                part.type == "comment" &&
+                  "dark:text-muted-foreground text-muted-foreground italic",
               )}
             >
               {part.text}

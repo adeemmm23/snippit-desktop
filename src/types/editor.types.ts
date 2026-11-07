@@ -1,4 +1,4 @@
 export type Part = {
-  type: "variable" | "text";
+  type: "variable" | "text" | "comment";
   text: string;
 };
