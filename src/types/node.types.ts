@@ -8,6 +8,7 @@ export type FileType = {
   id: string;
   type: "file";
   name: string;
+  isPublic?: boolean;
   content: string;
 };
 
@@ -15,6 +16,7 @@ export type FolderType = {
   id: string;
   type: "folder";
   name: string;
+  isPublic?: boolean;
   files: NodeType[];
 };
 
