@@ -11,7 +11,7 @@ import {
   type Collection,
   type NodeType,
 } from "@/types/node.types";
-import { getNodeContent } from "@/utils/files.utils";
+import { getNodeContent, getOrCreateNodeContent } from "@/utils/files.utils";
 
 type FilesStore = {
   collections: Collection[];
@@ -239,7 +239,7 @@ export const useFilesStore = create<FilesStore>()(
         const newFiles = deepClone(files);
         const name = path[path.length - 1];
 
-        const node = getNodeContent(path.slice(0, -1), newFiles);
+        const node = getOrCreateNodeContent(path.slice(0, -1), newFiles);
         const parent = node && isFolder(node) ? node.files : newFiles;
 
         const finalName = getAvailableName(parent, name);
