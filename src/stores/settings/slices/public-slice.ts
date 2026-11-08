@@ -6,7 +6,7 @@ export type PublicSlice = {
   removePublicFolder: (folderPath: string) => void;
 
   publicCollections: string[];
-  addPublicCollection: (collectionId: string) => void;
+  addPublicCollection: (collectionId: string) => boolean;
   removePublicCollection: (collectionId: string) => void;
 };
 
@@ -29,13 +29,31 @@ export const createPublicSlice: StateCreator<PublicSlice> = (set) => ({
   publicCollections: [],
   addPublicCollection: (collectionPath) => {
     const trimmed = collectionPath?.trim();
-    if (!trimmed) return;
+    if (!trimmed) return false;
 
-    set((state) => ({
-      publicCollections: state.publicCollections.includes(trimmed)
-        ? state.publicCollections
-        : [...state.publicCollections, trimmed],
-    }));
+    const getCollectionName = (p: string) =>
+      p
+        .split(/[/\\]/)
+        .pop()
+        ?.replace(/\.json$/i, "")
+        .toLowerCase() || "";
+
+    const newName = getCollectionName(trimmed);
+    let duplicateRemoved = false;
+
+    set((state) => {
+      const filtered = state.publicCollections.filter((p) => {
+        const matches = getCollectionName(p) === newName;
+        if (matches) duplicateRemoved = true;
+        return !matches;
+      });
+
+      return {
+        publicCollections: [...filtered, trimmed],
+      };
+    });
+
+    return duplicateRemoved;
   },
   removePublicCollection: (collectionId) =>
     set((state) => ({

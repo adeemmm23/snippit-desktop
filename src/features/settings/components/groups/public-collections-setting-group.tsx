@@ -8,6 +8,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { readDir, readTextFile } from "@tauri-apps/plugin-fs";
 import { cn } from "cn";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import SettingGroup from "../ui/setting-group";
 
@@ -54,7 +55,7 @@ export default function PublicCollectionsSettingGroup() {
 
           for (const file of jsonFiles) {
             try {
-              const filePath = `${folderPath}/${file.name}`;
+              const filePath = `${folderPath}\\${file.name}`;
               const content = await readTextFile(filePath);
               const parsed = JSON.parse(content);
 
@@ -99,9 +100,15 @@ export default function PublicCollectionsSettingGroup() {
         <p className="text-muted-foreground text-sm">
           Add pre-made collections of files to your database.
         </p>
-        {validatedCollections.map((collection) => (
-          <PublicCollection name={collection.name} path={collection.path} />
-        ))}
+        <div className="flex flex-col gap-2">
+          {validatedCollections.map((collection) => (
+            <PublicCollection
+              key={collection.path}
+              name={collection.name}
+              path={collection.path}
+            />
+          ))}
+        </div>
         <Button
           variant="default"
           onClick={() => setActionDialog(true)}
@@ -111,7 +118,6 @@ export default function PublicCollectionsSettingGroup() {
           <span>Link Public Folders</span>
         </Button>
       </SettingGroup>
-
       <Dialog
         open={actionDialog == true}
         onOpenChange={(open) => {
@@ -210,27 +216,31 @@ function PublicCollection({ name, path }: PublicCollectionProps) {
 
   const isAdded = publicCollections.includes(path);
   return (
-    <div className="flex w-full min-w-0 gap-2">
-      <div className="border-border bg-background dark:bg-input/30 dark:border-input flex h-9 max-w-72 min-w-0 flex-1 items-center justify-between rounded-md border px-2.5 shadow-xs">
-        <ScrollArea className="w-full min-w-0 whitespace-nowrap">
-          <div className="flex h-full items-center text-sm">{name}</div>
-        </ScrollArea>
-        <Separator
-          orientation="vertical"
-          className="bg-border mx-2 my-auto h-4"
-        />
-        <Switch
-          defaultChecked={isAdded}
-          checked={isAdded}
-          onCheckedChange={(value) => {
-            if (value) {
-              addPublicCollection(path);
-            } else {
-              removePublicCollection(path);
+    <div
+      title={path}
+      className="border-border bg-background dark:bg-input/30 dark:border-input flex h-9 max-w-72 min-w-0 items-center justify-between rounded-md border px-2.5 shadow-xs"
+    >
+      <ScrollArea className="w-full min-w-0 whitespace-nowrap">
+        <div className="flex h-full items-center text-sm">{name}</div>
+      </ScrollArea>
+      <Separator
+        orientation="vertical"
+        className="bg-border mx-2 my-auto h-4"
+      />
+      <Switch
+        defaultChecked={isAdded}
+        checked={isAdded}
+        onCheckedChange={(value) => {
+          if (value) {
+            const isThereDuplicateRemoved = addPublicCollection(path);
+            if (isThereDuplicateRemoved) {
+              toast.info("Collection replaced with new path.");
             }
-          }}
-        />
-      </div>
+          } else {
+            removePublicCollection(path);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -2,14 +2,11 @@ import { readTextFile } from "@tauri-apps/plugin-fs";
 import { create } from "zustand";
 
 import useSettingsStore from "@/stores/settings/settings-store";
-import type { NodeType } from "@/types/node.types";
+import type { Collection } from "@/types/node.types";
 
-export interface PublicCollection {
-  id: string;
-  name: string;
-  files: NodeType[];
+export type PublicCollection = Collection & {
   sourcePath: string;
-}
+};
 
 type PublicCollectionsState = {
   collections: PublicCollection[];

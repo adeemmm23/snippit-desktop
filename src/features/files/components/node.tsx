@@ -1,8 +1,11 @@
 import { useDraggable, useDroppable } from "@dnd-kit/react";
 import {
   Delete02Icon,
+  Download01Icon,
   File01Icon,
+  FileCloudIcon,
   Folder01Icon,
+  FolderCloudIcon,
   InputCursorTextIcon,
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons";
@@ -26,7 +29,7 @@ type NodeProps = {
   type: "file" | "folder";
   path: string[];
   isActive?: boolean;
-  isNew?: boolean;
+  isPublic?: boolean;
   onClick: () => void;
 };
 
@@ -35,6 +38,7 @@ export default function Node({
   type,
   onClick,
   isActive,
+  isPublic,
   path,
 }: NodeProps) {
   const removeItem = useFilesStore((state) => state.removeItem);
@@ -109,7 +113,15 @@ export default function Node({
             }}
           >
             <HugeiconsIcon
-              icon={type == "file" ? File01Icon : Folder01Icon}
+              icon={
+                type == "file"
+                  ? isPublic
+                    ? FileCloudIcon
+                    : File01Icon
+                  : isPublic
+                    ? FolderCloudIcon
+                    : Folder01Icon
+              }
               className="size-4 shrink-0"
             />
             <Name
@@ -136,25 +148,37 @@ export default function Node({
                   }
                 />
                 <DropdownMenuContent align="end">
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={handleRenameStart}>
-                      <HugeiconsIcon
-                        icon={InputCursorTextIcon}
-                        className="size-4"
-                      />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsOpened(true);
-                      }}
-                    >
-                      <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                  {isPublic ? (
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => {}}>
+                        <HugeiconsIcon
+                          icon={Download01Icon}
+                          className="size-4"
+                        />
+                        Download
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  ) : (
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={handleRenameStart}>
+                        <HugeiconsIcon
+                          icon={InputCursorTextIcon}
+                          className="size-4"
+                        />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsOpened(true);
+                        }}
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
