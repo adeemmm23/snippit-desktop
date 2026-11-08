@@ -9,6 +9,7 @@ import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import { FileEmpty01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 import FolderHeader from "./folder-header";
 import Node from "./node";
@@ -16,6 +17,7 @@ import Node from "./node";
 import { useEditorStore } from "@/stores/editor/editor-store";
 import { useFilesStore } from "@/stores/files/files-store";
 import { usePublicCollectionsStore } from "@/stores/public/public-store";
+import useSettingsStore from "@/stores/settings/settings-store";
 import { isFile, isFolder, type NodeType } from "@/types/node.types";
 import { ScrollArea } from "@/ui/scroll-area";
 import { getNodeContent } from "@/utils/files.utils";
@@ -120,9 +122,23 @@ export default function Tree() {
     ],
   });
 
+  const publicCollectionPaths = useSettingsStore(
+    (state) => state.publicCollections,
+  );
+
   useEffect(() => {
-    usePublicCollectionsStore.getState().loadPublicCollections();
-  }, [activeCollection]);
+    toast.loading("Loading public collections", {
+      id: "public-collections-loading",
+    });
+    usePublicCollectionsStore
+      .getState()
+      .loadPublicCollections()
+      .finally(() => {
+        setTimeout(() => {
+          toast.dismiss("public-collections-loading");
+        }, 1000);
+      });
+  }, [activeCollection, publicCollectionPaths]);
 
   return (
     <DragDropProvider

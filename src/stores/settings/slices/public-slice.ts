@@ -1,5 +1,7 @@
 import type { StateCreator } from "zustand";
 
+import { useFilesStore } from "@/stores/files/files-store";
+
 export type PublicSlice = {
   publicFolders: string[];
   addPublicFolder: (folderPath: string) => void;
@@ -28,6 +30,28 @@ export const createPublicSlice: StateCreator<PublicSlice> = (set) => ({
     })),
   publicCollections: [],
   addPublicCollection: (collectionPath) => {
+    // This is needed because to use public collection you need to have a created collection that has the same name; empty or not
+    const isThereCollection = useFilesStore.getState().collections.some(
+      (c) =>
+        c.name.toLowerCase() ===
+        collectionPath
+          ?.trim()
+          .split(/[/\\]/)
+          .pop()
+          ?.replace(/\.json$/i, "")
+          ?.toLowerCase(),
+    );
+
+    if (!isThereCollection) {
+      useFilesStore.getState().createCollection(
+        collectionPath
+          ?.trim()
+          .split(/[/\\]/)
+          .pop()
+          ?.replace(/\.json$/i, "") || "",
+      );
+    }
+
     const trimmed = collectionPath?.trim();
     if (!trimmed) return false;
 
@@ -55,10 +79,42 @@ export const createPublicSlice: StateCreator<PublicSlice> = (set) => ({
 
     return duplicateRemoved;
   },
-  removePublicCollection: (collectionId) =>
+  removePublicCollection: (collectionPath) => {
+    const isThereCollection = useFilesStore.getState().collections.some(
+      (c) =>
+        c.name.toLowerCase() ===
+        collectionPath
+          ?.trim()
+          .split(/[/\\]/)
+          .pop()
+          ?.replace(/\.json$/i, "")
+          ?.toLowerCase(),
+    );
+
+    // check if collection has files
+    if (isThereCollection) {
+      const collection = useFilesStore.getState().collections.find(
+        (c) =>
+          c.name.toLowerCase() ===
+          collectionPath
+            ?.trim()
+            .split(/[/\\]/)
+            .pop()
+            ?.replace(/\.json$/i, "")
+            ?.toLowerCase(),
+      );
+
+      const hasFiles = (collection?.files.length ?? 0) > 0;
+
+      if (!hasFiles) {
+        useFilesStore.getState().deleteCollection(collection?.id || "");
+      }
+    }
+
     set((state) => ({
       publicCollections: state.publicCollections.filter(
-        (id) => id !== collectionId,
+        (path) => path !== collectionPath,
       ),
-    })),
+    }));
+  },
 });

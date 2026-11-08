@@ -75,8 +75,8 @@ export default function SettingsSections() {
             <ShortcutsGroup />
           </SettingSection>
           <SettingSection title="Files">
-            <CollectionsSettingGroup />
             <PublicCollectionsSettingGroup />
+            <CollectionsSettingGroup />
             <ExportGroup />
           </SettingSection>
           <SettingSection title="Danger">
