@@ -7,6 +7,7 @@ import {
 
 import { fsStorage } from "../storage";
 import { createHelpersSlice } from "./slices/helper-slice";
+import { createPublicSlice } from "./slices/public-slice";
 import { createTimerSlice } from "./slices/timer-slice";
 import { createTooltipsSlice } from "./slices/tooltips-slice";
 import { createVariableSlice } from "./slices/variable-slice";
@@ -16,6 +17,7 @@ const settingsSlices = [
   createTooltipsSlice,
   createHelpersSlice,
   createTimerSlice,
+  createPublicSlice,
 ] as const;
 
 type UnionToIntersection<T> = (

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import AboutSettingGroup from "./groups/about-setting-group";
 import CollectionsSettingGroup from "./groups/collections-setting-group";
 import HelpersSettingGroup from "./groups/helpers-setting-group";
+import PublicCollectionsSettingGroup from "./groups/public-collections-setting-group";
 import ShortcutsGroup from "./groups/shortcuts-setting-group";
 import TooltipsGroup from "./groups/tooltips-setting-group";
 import VariableSettingGroup from "./groups/variable-setting-group";
@@ -74,6 +75,7 @@ export default function SettingsSections() {
             <ShortcutsGroup />
           </SettingSection>
           <SettingSection title="Files">
+            <PublicCollectionsSettingGroup />
             <CollectionsSettingGroup />
             <ExportGroup />
           </SettingSection>

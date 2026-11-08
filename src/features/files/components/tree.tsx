@@ -8,17 +8,41 @@ import {
 import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import { FileEmpty01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 import FolderHeader from "./folder-header";
 import Node from "./node";
 
 import { useEditorStore } from "@/stores/editor/editor-store";
 import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, isFolder } from "@/types/node.types";
+import { usePublicCollectionsStore } from "@/stores/public/public-store";
+import useSettingsStore from "@/stores/settings/settings-store";
+import { isFile, isFolder, type NodeType } from "@/types/node.types";
 import { ScrollArea } from "@/ui/scroll-area";
 import { getNodeContent } from "@/utils/files.utils";
 
+function markAsPublic(nodes: NodeType[]): NodeType[] {
+  return nodes.map((node) => {
+    if (node.type === "folder") {
+      return {
+        ...node,
+        isPublic: true,
+        files: markAsPublic(node.files),
+      };
+    }
+    return {
+      ...node,
+      isPublic: true,
+    };
+  });
+}
+
 export default function Tree() {
+  const publicCollections = usePublicCollectionsStore(
+    (state) => state.collections,
+  );
+
   const setTemplate = useEditorStore((state) => state.setTemplate);
   const setActiveFilePath = useFilesStore((state) => state.setActiveFile);
   const activeFilePath = useFilesStore((state) => state.activeFile);
@@ -31,11 +55,50 @@ export default function Tree() {
   );
   const moveItem = useFilesStore((state) => state.moveItem);
 
-  const node = getNodeContent(currentWorkingFolder, data);
+  const localNode = getNodeContent(currentWorkingFolder, data);
+  const localItems =
+    localNode && isFolder(localNode)
+      ? localNode.files
+      : currentWorkingFolder.length === 0
+        ? data
+        : [];
 
-  const currentItems = node && isFolder(node) ? node.files : data;
+  const publicCollection = publicCollections.find((collection) => {
+    const activeLocalCollection = collections.find(
+      (c) => c.id === activeCollection,
+    );
 
-  // Separate folders and files
+    return collection.name === activeLocalCollection?.name;
+  });
+
+  let publicItems: NodeType[] = [];
+
+  if (publicCollection) {
+    const publicNode = getNodeContent(
+      currentWorkingFolder,
+      publicCollection.files,
+    );
+    const rawPublicItems =
+      publicNode && isFolder(publicNode)
+        ? publicNode.files
+        : currentWorkingFolder.length === 0
+          ? publicCollection.files
+          : [];
+    publicItems = markAsPublic(rawPublicItems);
+  }
+
+  const mergedMap = new Map<string, NodeType>();
+
+  for (const item of publicItems) {
+    mergedMap.set(item.name, item);
+  }
+
+  for (const item of localItems) {
+    mergedMap.set(item.name, item);
+  }
+
+  const currentItems = Array.from(mergedMap.values());
+
   const folders = currentItems
     .filter(isFolder)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -59,7 +122,24 @@ export default function Tree() {
     ],
   });
 
-  // TODO: look into this, and keep consitency with the right panel
+  const publicCollectionPaths = useSettingsStore(
+    (state) => state.publicCollections,
+  );
+
+  useEffect(() => {
+    toast.loading("Loading public collections", {
+      id: "public-collections-loading",
+    });
+    usePublicCollectionsStore
+      .getState()
+      .loadPublicCollections()
+      .finally(() => {
+        setTimeout(() => {
+          toast.dismiss("public-collections-loading");
+        }, 1000);
+      });
+  }, [activeCollection, publicCollectionPaths]);
+
   return (
     <DragDropProvider
       manager={manager}
@@ -81,30 +161,30 @@ export default function Tree() {
         <FolderHeader />
         <ScrollArea className="size-full overflow-auto">
           <div className="flex h-full w-full flex-col gap-2 p-2">
-            {folders.map(({ name }) => (
+            {folders.map((node) => (
               <Node
-                key={name}
-                name={name}
-                type="folder"
-                path={currentWorkingFolder.concat(name)}
+                key={node.name}
+                node={node}
+                path={currentWorkingFolder.concat(node.name)}
                 onClick={() => {
-                  setCurrentWorkingFolder(currentWorkingFolder.concat(name));
+                  setCurrentWorkingFolder(
+                    currentWorkingFolder.concat(node.name),
+                  );
                 }}
               />
             ))}
-            {files.map(({ name, content }) => (
+            {files.map((node) => (
               <Node
-                key={name}
-                name={name}
-                type="file"
-                path={currentWorkingFolder.concat(name)}
+                key={node.name}
+                node={node}
+                path={currentWorkingFolder.concat(node.name)}
                 isActive={
                   activeFilePath.join("/") ===
-                  currentWorkingFolder.concat(name).join("/")
+                  currentWorkingFolder.concat(node.name).join("/")
                 }
                 onClick={() => {
-                  setTemplate(content);
-                  setActiveFilePath(currentWorkingFolder.concat(name));
+                  setTemplate(node.content);
+                  setActiveFilePath(currentWorkingFolder.concat(node.name));
                 }}
               />
             ))}

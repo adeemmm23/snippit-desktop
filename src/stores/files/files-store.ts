@@ -11,7 +11,7 @@ import {
   type Collection,
   type NodeType,
 } from "@/types/node.types";
-import { getNodeContent } from "@/utils/files.utils";
+import { getNodeContent, getOrCreateNodeContent } from "@/utils/files.utils";
 
 type FilesStore = {
   collections: Collection[];
@@ -37,6 +37,7 @@ type FilesStore = {
     type: "file" | "folder",
     selectedCollection?: string,
     content?: string,
+    nodes?: NodeType[],
   ) => void;
   removeItem: (path: string[]) => void;
   moveItem: (oldPath: string[], newPath: string[]) => void;
@@ -228,7 +229,7 @@ export const useFilesStore = create<FilesStore>()(
         set({ collections: updatedCollections });
         return true;
       },
-      createItem: (path, type, selecteCollection, content) => {
+      createItem: (path, type, selecteCollection, content, nodes) => {
         const { collections, activeCollection } = get();
         const files =
           collections.find(
@@ -239,7 +240,7 @@ export const useFilesStore = create<FilesStore>()(
         const newFiles = deepClone(files);
         const name = path[path.length - 1];
 
-        const node = getNodeContent(path.slice(0, -1), newFiles);
+        const node = getOrCreateNodeContent(path.slice(0, -1), newFiles);
         const parent = node && isFolder(node) ? node.files : newFiles;
 
         const finalName = getAvailableName(parent, name);
@@ -260,7 +261,7 @@ export const useFilesStore = create<FilesStore>()(
             id: now,
             type: "folder",
             name: finalName,
-            files: [],
+            files: nodes ?? [],
           };
         }
 

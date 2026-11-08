@@ -1,8 +1,11 @@
 import { useDraggable, useDroppable } from "@dnd-kit/react";
 import {
   Delete02Icon,
+  Download01Icon,
   File01Icon,
+  FileCloudIcon,
   Folder01Icon,
+  FolderCloudIcon,
   InputCursorTextIcon,
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons";
@@ -11,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useFilesStore } from "@/stores/files/files-store";
+import { isFile, type NodeType } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -22,23 +26,20 @@ import {
 import { cn } from "@/utils/cn";
 
 type NodeProps = {
-  name: string;
-  type: "file" | "folder";
+  // name: string;
+  // type: "file" | "folder";
+  node: NodeType;
   path: string[];
   isActive?: boolean;
-  isNew?: boolean;
+  // isPublic?: boolean;
+  // content?: string;
   onClick: () => void;
 };
 
-export default function Node({
-  name,
-  type,
-  onClick,
-  isActive,
-  path,
-}: NodeProps) {
+export default function Node({ node, onClick, isActive, path }: NodeProps) {
   const removeItem = useFilesStore((state) => state.removeItem);
   const renameItem = useFilesStore((state) => state.renameItem);
+  const createItem = useFilesStore((state) => state.createItem);
 
   const [isRenaming, setIsRenaming] = useState(false);
   // const [isSelected, setIsSelected] = useState(false);
@@ -73,7 +74,7 @@ export default function Node({
     setIsRenaming(false);
   };
 
-  const isDraggingOver = type == "folder" && isDropTarget && !isDragging;
+  const isDraggingOver = node.type == "folder" && isDropTarget && !isDragging;
 
   // TODO: check styling
   return (
@@ -89,18 +90,14 @@ export default function Node({
         )}
         render={
           <div
-            ref={(node) => {
-              nodeRef(node);
-              if (type == "folder") dropRef(node);
+            ref={(n) => {
+              nodeRef(n);
+              if (node.type == "folder") dropRef(n);
             }}
             role="button"
             tabIndex={0}
-            title={name}
+            title={node.name}
             data-path={path.join("/")}
-            // onClick={(e) => {
-            //   e.stopPropagation();
-            //   setIsSelected((prev) => !prev);
-            // }}
             onDoubleClick={(e) => {
               e.stopPropagation();
               if (!isRenaming) {
@@ -109,11 +106,19 @@ export default function Node({
             }}
           >
             <HugeiconsIcon
-              icon={type == "file" ? File01Icon : Folder01Icon}
+              icon={
+                node.type == "file"
+                  ? node.isPublic
+                    ? FileCloudIcon
+                    : File01Icon
+                  : node.isPublic
+                    ? FolderCloudIcon
+                    : Folder01Icon
+              }
               className="size-4 shrink-0"
             />
             <Name
-              name={name}
+              name={node.name}
               isRenaming={isRenaming}
               onRenameEnd={handleRenameEnd}
               onRenameCancel={handleRenameCancel}
@@ -136,25 +141,46 @@ export default function Node({
                   }
                 />
                 <DropdownMenuContent align="end">
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={handleRenameStart}>
-                      <HugeiconsIcon
-                        icon={InputCursorTextIcon}
-                        className="size-4"
-                      />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsOpened(true);
-                      }}
-                    >
-                      <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                  {node.isPublic ? (
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          createItem(
+                            path,
+                            node.type,
+                            undefined,
+                            isFile(node) ? node.content : undefined,
+                          );
+                        }}
+                      >
+                        <HugeiconsIcon
+                          icon={Download01Icon}
+                          className="size-4"
+                        />
+                        Download
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  ) : (
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={handleRenameStart}>
+                        <HugeiconsIcon
+                          icon={InputCursorTextIcon}
+                          className="size-4"
+                        />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsOpened(true);
+                        }}
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -164,8 +190,8 @@ export default function Node({
       <ConfirmDialog
         open={isOpened}
         onOpenChange={setIsOpened}
-        title={`Remove ${type}`}
-        description={`Are you sure you want to remove ${name}?`}
+        title={`Remove ${node.type}`}
+        description={`Are you sure you want to remove ${node.name}?`}
         confirmLabel="Delete"
         destructive
         onConfirm={() => {

@@ -18,9 +18,20 @@
     "fs:allow-exists",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
-    "fs:allow-remove",
+    "fs:allow-read-dir",
     {
       "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        { "path": "$DOCUMENT/Snippit" },
+        { "path": "$DOCUMENT/Snippit/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
       "allow": [
         { "path": "$DOCUMENT/Snippit" },
         { "path": "$DOCUMENT/Snippit/**" }
