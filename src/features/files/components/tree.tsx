@@ -179,6 +179,7 @@ export default function Tree() {
                 name={name}
                 type="file"
                 isPublic={isPublic}
+                content={content}
                 path={currentWorkingFolder.concat(name)}
                 isActive={
                   activeFilePath.join("/") ===

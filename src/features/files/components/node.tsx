@@ -30,6 +30,7 @@ type NodeProps = {
   path: string[];
   isActive?: boolean;
   isPublic?: boolean;
+  content?: string;
   onClick: () => void;
 };
 
@@ -39,10 +40,12 @@ export default function Node({
   onClick,
   isActive,
   isPublic,
+  content,
   path,
 }: NodeProps) {
   const removeItem = useFilesStore((state) => state.removeItem);
   const renameItem = useFilesStore((state) => state.renameItem);
+  const createItem = useFilesStore((state) => state.createItem);
 
   const [isRenaming, setIsRenaming] = useState(false);
   // const [isSelected, setIsSelected] = useState(false);
@@ -150,7 +153,17 @@ export default function Node({
                 <DropdownMenuContent align="end">
                   {isPublic ? (
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => {}}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          console.log(path, name, content);
+                          createItem(
+                            path,
+                            type,
+                            undefined,
+                            content ?? undefined,
+                          );
+                        }}
+                      >
                         <HugeiconsIcon
                           icon={Download01Icon}
                           className="size-4"
