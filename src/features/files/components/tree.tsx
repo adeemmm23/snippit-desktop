@@ -161,33 +161,30 @@ export default function Tree() {
         <FolderHeader />
         <ScrollArea className="size-full overflow-auto">
           <div className="flex h-full w-full flex-col gap-2 p-2">
-            {folders.map(({ name, isPublic }) => (
+            {folders.map((node) => (
               <Node
-                key={name}
-                name={name}
-                type="folder"
-                isPublic={isPublic}
-                path={currentWorkingFolder.concat(name)}
+                key={node.name}
+                node={node}
+                path={currentWorkingFolder.concat(node.name)}
                 onClick={() => {
-                  setCurrentWorkingFolder(currentWorkingFolder.concat(name));
+                  setCurrentWorkingFolder(
+                    currentWorkingFolder.concat(node.name),
+                  );
                 }}
               />
             ))}
-            {files.map(({ name, content, isPublic }) => (
+            {files.map((node) => (
               <Node
-                key={name}
-                name={name}
-                type="file"
-                isPublic={isPublic}
-                content={content}
-                path={currentWorkingFolder.concat(name)}
+                key={node.name}
+                node={node}
+                path={currentWorkingFolder.concat(node.name)}
                 isActive={
                   activeFilePath.join("/") ===
-                  currentWorkingFolder.concat(name).join("/")
+                  currentWorkingFolder.concat(node.name).join("/")
                 }
                 onClick={() => {
-                  setTemplate(content);
-                  setActiveFilePath(currentWorkingFolder.concat(name));
+                  setTemplate(node.content);
+                  setActiveFilePath(currentWorkingFolder.concat(node.name));
                 }}
               />
             ))}

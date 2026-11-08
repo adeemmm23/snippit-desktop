@@ -37,6 +37,7 @@ type FilesStore = {
     type: "file" | "folder",
     selectedCollection?: string,
     content?: string,
+    nodes?: NodeType[],
   ) => void;
   removeItem: (path: string[]) => void;
   moveItem: (oldPath: string[], newPath: string[]) => void;
@@ -228,7 +229,7 @@ export const useFilesStore = create<FilesStore>()(
         set({ collections: updatedCollections });
         return true;
       },
-      createItem: (path, type, selecteCollection, content) => {
+      createItem: (path, type, selecteCollection, content, nodes) => {
         const { collections, activeCollection } = get();
         const files =
           collections.find(
@@ -260,7 +261,7 @@ export const useFilesStore = create<FilesStore>()(
             id: now,
             type: "folder",
             name: finalName,
-            files: [],
+            files: nodes ?? [],
           };
         }
 
