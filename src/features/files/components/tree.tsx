@@ -22,6 +22,7 @@ import { isFile, isFolder, type NodeType } from "@/types/node.types";
 import { ScrollArea } from "@/ui/scroll-area";
 import { getNodeContent } from "@/utils/files.utils";
 
+// TODO: This approach is bad because it mess up the data and the view states, it has to change
 function markAsPublic(nodes: NodeType[]): NodeType[] {
   return nodes.map((node) => {
     if (node.type === "folder") {
