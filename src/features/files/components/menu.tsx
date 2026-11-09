@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { IT_SUPPORT_SNIPPETS } from "@/constants/test.constants";
 import { useFilesStore } from "@/stores/files/files-store";
@@ -35,6 +36,7 @@ export default function Menu() {
   const createCollection = useFilesStore((state) => state.createCollection);
   const setFiles = useFilesStore((state) => state.setFiles);
   const currentWorkingFolder = useFilesStore((state) => state.currenFolder);
+  const ensureIds = useFilesStore((state) => state.ensureIds);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createType, setCreateType] = useState<"file" | "folder">("file");
@@ -98,6 +100,19 @@ export default function Menu() {
             >
               <HugeiconsIcon icon={PackageAdd01Icon} className="size-4" />
               Dummy
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                const count = ensureIds();
+                toast.success(
+                  count === 0
+                    ? "Every item already has an id"
+                    : `Generated ${count} ids`,
+                );
+              }}
+            >
+              <HugeiconsIcon icon={Refresh01Icon} className="size-4" />
+              Fix IDs
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

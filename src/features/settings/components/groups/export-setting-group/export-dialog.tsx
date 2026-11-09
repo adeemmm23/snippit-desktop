@@ -1,9 +1,12 @@
+import { Warning } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { save } from "@tauri-apps/plugin-dialog"; // Tauri v2 dialog plugin
 import { writeTextFile } from "@tauri-apps/plugin-fs"; // Tauri v2 fs plugin
 import { useMemo, useState } from "react";
 
 import { useFilesStore } from "@/stores/files/files-store";
 import useSettingsStore from "@/stores/settings/settings-store";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/ui/alert";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -25,6 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { Switch } from "@/ui/switch";
+import { addPublicPrefix } from "@/utils/files.utils";
 
 export default function ExportDialog() {
   const collections = useFilesStore((state) => state.collections);
@@ -38,13 +43,14 @@ export default function ExportDialog() {
   const [selectedCollection, setSelectedCollection] =
     useState(activeCollection);
 
-  const files =
+  const nodes =
     collections.find((c) => c.id === selectedCollection)?.files || [];
 
   const variableFormat = useSettingsStore((state) => state.variableFormat);
 
   const [exportOpen, setExportOpen] = useState(false);
   const [exportFileName, setExportFileName] = useState("snippets.json");
+  const [isPublic, setIsPublic] = useState(false);
 
   const sanitizedExportFileName = useMemo(() => {
     const trimmed = exportFileName.trim();
@@ -58,7 +64,6 @@ export default function ExportDialog() {
     if (!canConfirmExport) return;
 
     try {
-      // 1. Open Tauri's native OS save dialog
       const filePath = await save({
         defaultPath: sanitizedExportFileName,
         filters: [
@@ -69,20 +74,19 @@ export default function ExportDialog() {
         ],
       });
 
-      // If the user cancels the dialog, filePath will be null
       if (!filePath) return;
 
-      // 2. Prepare the payload string
+      const files = isPublic ? addPublicPrefix(nodes) : nodes;
+
       const data = {
         files,
         variableFormat,
       };
-      const fileContent = JSON.stringify(data, null, 2); // Pretty-printed JSON is usually best for exports
 
-      // 3. Write text content directly to the chosen path using the fs plugin
+      const fileContent = JSON.stringify(data, null, 2);
+
       await writeTextFile(filePath, fileContent);
 
-      // 4. Close the dialog cleanly
       setExportOpen(false);
     } catch (error) {
       console.error("Failed to export file:", error);
@@ -129,6 +133,25 @@ export default function ExportDialog() {
             placeholder="snippets.json"
           />
         </div>
+        <Alert>
+          <HugeiconsIcon icon={Warning} />
+          <AlertTitle>Public IDs</AlertTitle>
+          <AlertDescription>
+            Adds a{" "}
+            <code className="bg-muted text-muted-foreground rounded-sm px-1 py-0.5 font-mono text-xs">
+              pub
+            </code>{" "}
+            prefix to the ID of every file and folder in the export.
+          </AlertDescription>
+          <AlertAction>
+            <Switch
+              id="exportPublicIds"
+              aria-label="Add pub- prefix to exported IDs"
+              checked={isPublic}
+              onCheckedChange={(checked) => setIsPublic(!!checked)}
+            />
+          </AlertAction>
+        </Alert>
         <DialogFooter>
           <Button variant="outline" onClick={() => setExportOpen(false)}>
             Cancel

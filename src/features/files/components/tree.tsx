@@ -176,7 +176,7 @@ export default function Tree() {
             ))}
             {files.map((node) => (
               <Node
-                key={node.name}
+                key={node.id}
                 node={node}
                 path={currentWorkingFolder.concat(node.name)}
                 isActive={

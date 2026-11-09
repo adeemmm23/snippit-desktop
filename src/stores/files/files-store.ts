@@ -11,7 +11,12 @@ import {
   type Collection,
   type NodeType,
 } from "@/types/node.types";
-import { getNodeContent, getOrCreateNodeContent } from "@/utils/files.utils";
+import {
+  assignMissingIds,
+  generateId,
+  getNodeContent,
+  getOrCreateNodeContent,
+} from "@/utils/files.utils";
 
 type FilesStore = {
   collections: Collection[];
@@ -42,6 +47,7 @@ type FilesStore = {
   removeItem: (path: string[]) => void;
   moveItem: (oldPath: string[], newPath: string[]) => void;
   renameItem: (path: string[], name: string) => void;
+  ensureIds: () => number;
 };
 
 export const useFilesStore = create<FilesStore>()(
@@ -91,11 +97,11 @@ export const useFilesStore = create<FilesStore>()(
           return;
         }
 
-        const now = Date.now().toString();
+        const id = generateId();
 
         set({
-          collections: [...collections, { id: now, name, files: [] }],
-          activeCollection: now,
+          collections: [...collections, { id, name, files: [] }],
+          activeCollection: id,
         });
       },
       deleteCollection: (id) => {
@@ -245,20 +251,20 @@ export const useFilesStore = create<FilesStore>()(
 
         const finalName = getAvailableName(parent, name);
 
-        const now = Date.now().toString();
+        const id = generateId();
 
         let newNode: NodeType;
 
         if (type === "file") {
           newNode = {
-            id: now,
+            id,
             type: "file",
             name: finalName,
             content: content || "",
           };
         } else {
           newNode = {
-            id: now,
+            id,
             type: "folder",
             name: finalName,
             files: nodes ?? [],
@@ -406,6 +412,33 @@ export const useFilesStore = create<FilesStore>()(
       renameItem: (path, newName) => {
         const { moveItem } = get();
         moveItem(path, [...path.slice(0, -1), newName]);
+      },
+      ensureIds: () => {
+        const { collections, activeCollection } = get();
+        let total = 0;
+
+        const updated = collections.map((collection) => {
+          const { nodes, count } = assignMissingIds(collection.files);
+          total += count;
+
+          let id = collection.id;
+          if (!id) {
+            id = generateId();
+            total++;
+          }
+          return { ...collection, id, files: nodes };
+        });
+
+        if (total === 0) return 0;
+
+        set({
+          collections: updated,
+          // if the active collection was the one without an id, fall back to the first
+          activeCollection: updated.some((c) => c.id === activeCollection)
+            ? activeCollection
+            : updated[0].id,
+        });
+        return total;
       },
     }),
     {
