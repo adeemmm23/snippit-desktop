@@ -1,18 +1,8 @@
-import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { useEffect, useState } from "react";
 
 import SettingGroup from "../ui/setting-group";
 
 export default function AboutSettingGroup() {
-  const [version, setVersion] = useState("");
-
-  useEffect(() => {
-    getVersion()
-      .then(setVersion)
-      .catch(() => setVersion(""));
-  }, []);
-
   return (
     <SettingGroup title="Snippit">
       <p className="text-muted-foreground text-sm">
@@ -33,9 +23,6 @@ export default function AboutSettingGroup() {
         </a>{" "}
         to learn more.
       </p>
-      {version && (
-        <p className="text-muted-foreground text-xs">Version {version}</p>
-      )}
     </SettingGroup>
   );
 }
