@@ -171,10 +171,6 @@ export const useFilesStore = create<FilesStore>()(
           activeFile: activeFilePath,
           openedFiles: newOpenedFiles,
         });
-
-        set({
-          activeFile: activeFilePath,
-        });
       },
       setCurrentFolder: (currentWorkingFolder) => {
         set({ currenFolder: currentWorkingFolder });
