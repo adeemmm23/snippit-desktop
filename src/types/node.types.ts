@@ -1,37 +1,36 @@
 export type Collection = {
   id: string;
   name: string;
-  files: NodeType[];
+  files: Node[];
   updatedAt?: string;
   createdAt?: string;
 };
 
-export type FileType = {
+type Base = {
   id: string;
+  type: "file" | "folder";
+  name: string;
+  isPublic?: boolean;
+  updatedAt?: string;
+  createdAt?: string;
+};
+
+export type File = Base & {
   type: "file";
-  name: string;
-  isPublic?: boolean;
   content: string;
-  updatedAt?: string;
-  createdAt?: string;
 };
 
-export type FolderType = {
-  id: string;
+export type Folder = Base & {
   type: "folder";
-  name: string;
-  isPublic?: boolean;
-  files: NodeType[];
-  updatedAt?: string;
-  createdAt?: string;
+  files: Node[];
 };
 
-export type NodeType = FileType | FolderType;
+export type Node = File | Folder;
 
-export function isFile(item: NodeType): item is FileType {
+export function isFile(item: Node): item is File {
   return item.type === "file";
 }
 
-export function isFolder(item: NodeType): item is FolderType {
+export function isFolder(item: Node): item is Folder {
   return item.type === "folder";
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { useEditorStore } from "@/stores/editor/editor-store";
 import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import { isFile, isFolder, type Node } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   Command,
@@ -166,7 +166,7 @@ function FileItem({ file, onSelectEnd }: FileItemProps) {
 
 // TODO: content shouldn't be shipped from here
 const flattenFiles = (
-  items: NodeType[],
+  items: Node[],
   prefix: string,
 ): { filename: string; path: string; content: string }[] => {
   const result: { filename: string; path: string; content: string }[] = [];

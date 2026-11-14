@@ -12,18 +12,18 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 import FolderHeader from "./folder-header";
-import Node from "./node";
+import NodeItem from "./node-item";
 
 import { useEditorStore } from "@/stores/editor/editor-store";
 import { useFilesStore } from "@/stores/files/files-store";
 import { usePublicCollectionsStore } from "@/stores/public/public-store";
 import useSettingsStore from "@/stores/settings/settings-store";
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import { isFile, isFolder, type Node } from "@/types/node.types";
 import { ScrollArea } from "@/ui/scroll-area";
 import { getNodeContent } from "@/utils/files.utils";
 
 // TODO: This approach is bad because it mess up the data and the view states, it has to change
-function markAsPublic(nodes: NodeType[]): NodeType[] {
+function markAsPublic(nodes: Node[]): Node[] {
   return nodes.map((node) => {
     if (node.type === "folder") {
       return {
@@ -72,7 +72,7 @@ export default function Tree() {
     return collection.name === activeLocalCollection?.name;
   });
 
-  let publicItems: NodeType[] = [];
+  let publicItems: Node[] = [];
 
   if (publicCollection) {
     const publicNode = getNodeContent(
@@ -88,7 +88,7 @@ export default function Tree() {
     publicItems = markAsPublic(rawPublicItems);
   }
 
-  const mergedMap = new Map<string, NodeType>();
+  const mergedMap = new Map<string, Node>();
 
   for (const item of publicItems) {
     mergedMap.set(item.name, item);
@@ -164,7 +164,7 @@ export default function Tree() {
         <ScrollArea className="size-full overflow-auto">
           <div className="flex h-full w-full flex-col gap-2 p-2">
             {folders.map((node) => (
-              <Node
+              <NodeItem
                 key={node.id}
                 node={node}
                 path={currentWorkingFolder.concat(node.name)}
@@ -176,7 +176,7 @@ export default function Tree() {
               />
             ))}
             {files.map((node) => (
-              <Node
+              <NodeItem
                 key={node.id}
                 node={node}
                 path={currentWorkingFolder.concat(node.name)}

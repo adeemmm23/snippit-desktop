@@ -6,7 +6,7 @@ import ImportFileDropzone from "./import-file-dropzone";
 import { VARIABLE_FORMATS } from "@/constants/files.constants";
 import { useFilesStore } from "@/stores/files/files-store";
 import useSettingsStore from "@/stores/settings/settings-store";
-import type { NodeType } from "@/types/node.types";
+import type { Node } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -171,10 +171,10 @@ const formatVariable = (name: string, format: string) => {
 };
 
 const changeVariableFormat = (
-  items: NodeType[],
+  items: Node[],
   fromFormat: string,
   toFormat: string,
-): NodeType[] => {
+): Node[] => {
   const fromRegex = VARIABLE_FORMATS.find((f) => f.label === fromFormat)?.value;
 
   if (!fromRegex) return items;

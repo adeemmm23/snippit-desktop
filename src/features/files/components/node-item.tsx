@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import { isFile, isFolder, type Node } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -28,7 +28,7 @@ import { cn } from "@/utils/cn";
 type NodeProps = {
   // name: string;
   // type: "file" | "folder";
-  node: NodeType;
+  node: Node;
   path: string[];
   isActive?: boolean;
   // isPublic?: boolean;
@@ -36,7 +36,7 @@ type NodeProps = {
   onClick: () => void;
 };
 
-function unmarkPublic(nodes: NodeType[]): NodeType[] {
+function unmarkPublic(nodes: Node[]): Node[] {
   return nodes.map((node) => {
     if (node.type === "folder") {
       const folder = { ...node, files: unmarkPublic(node.files) };
@@ -49,7 +49,7 @@ function unmarkPublic(nodes: NodeType[]): NodeType[] {
   });
 }
 
-export default function Node({ node, onClick, isActive, path }: NodeProps) {
+export default function NodeItem({ node, onClick, isActive, path }: NodeProps) {
   const removeItem = useFilesStore((state) => state.removeItem);
   const renameItem = useFilesStore((state) => state.renameItem);
   const createItem = useFilesStore((state) => state.createItem);

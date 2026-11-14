@@ -1,9 +1,6 @@
-import type { NodeType } from "@/types/node.types";
+import type { Node } from "@/types/node.types";
 
-export const getNodeContent = (
-  path: string[],
-  files: NodeType[],
-): NodeType | null => {
+export const getNodeContent = (path: string[], files: Node[]): Node | null => {
   if (path.length === 0) return null;
 
   let current = files;
@@ -20,10 +17,10 @@ export const getNodeContent = (
 
 export const getOrCreateNodeContent = (
   path: string[],
-  files: NodeType[],
+  files: Node[],
   type: "file" | "folder" = "folder",
   content: string = "",
-): NodeType | null => {
+): Node | null => {
   if (path.length === 0) return null;
 
   let current = files;
@@ -66,11 +63,11 @@ export const getOrCreateNodeContent = (
 export const generateId = (): string => crypto.randomUUID();
 
 export const assignMissingIds = (
-  nodes: NodeType[],
-): { nodes: NodeType[]; count: number } => {
+  nodes: Node[],
+): { nodes: Node[]; count: number } => {
   let count = 0;
 
-  const walk = (items: NodeType[]): NodeType[] =>
+  const walk = (items: Node[]): Node[] =>
     items.map((node) => {
       let id = node.id;
       if (!id) {
@@ -87,7 +84,7 @@ export const assignMissingIds = (
 
 export const PUBLIC_ID_PREFIX = "pub-";
 
-export const addPublicPrefix = (nodes: NodeType[]): NodeType[] =>
+export const addPublicPrefix = (nodes: Node[]): Node[] =>
   nodes.map((node) => {
     const id = node.id
       ? node.id.startsWith(PUBLIC_ID_PREFIX)

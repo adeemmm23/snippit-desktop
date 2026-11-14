@@ -16,7 +16,7 @@ import {
   isFile,
   isFolder,
   type Collection,
-  type NodeType,
+  type Node,
 } from "@/types/node.types";
 import {
   assignMissingIds,
@@ -31,15 +31,15 @@ type FilesStore = {
   activeFile: string[];
   currenFolder: string[];
   openedFiles: { path: string[]; count: number; openedAt: number }[];
-  setFiles: (files: NodeType[]) => void;
+  setFiles: (files: Node[]) => void;
   setActiveCollection: (id: string) => void;
-  createCollection: (name: string, files?: NodeType[]) => void;
+  createCollection: (name: string, files?: Node[]) => void;
   deleteCollection: (id: string) => void;
   renameCollection: (id: string, name: string) => void;
   setActiveFile: (path: string[]) => void;
   setCurrentFolder: (path: string[]) => void;
   addFiles: (
-    files: NodeType[],
+    files: Node[],
     path: string[],
     selectedCollection?: string,
   ) => void;
@@ -49,7 +49,7 @@ type FilesStore = {
     type: "file" | "folder",
     selectedCollection?: string,
     content?: string,
-    nodes?: NodeType[],
+    nodes?: Node[],
   ) => void;
   removeItem: (path: string[]) => void;
   moveItem: (oldPath: string[], newPath: string[]) => void;
@@ -272,7 +272,7 @@ export const useFilesStore = create<FilesStore>()(
 
         const id = generateId();
 
-        let newNode: NodeType;
+        let newNode: Node;
 
         if (type === "file") {
           newNode = {
@@ -315,7 +315,7 @@ export const useFilesStore = create<FilesStore>()(
 
         const itemName = path[path.length - 1];
         const itemIndex = parent.findIndex(
-          (item: NodeType) => item.name === itemName,
+          (item: Node) => item.name === itemName,
         );
 
         if (itemIndex === -1) {

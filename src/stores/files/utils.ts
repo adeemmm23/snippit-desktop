@@ -1,10 +1,7 @@
-import { isFolder, type NodeType } from "@/types/node.types";
+import { isFolder, type Node } from "@/types/node.types";
 import { getNodeContent } from "@/utils/files.utils";
 
-export const getAvailableName = (
-  items: NodeType[],
-  baseName: string,
-): string => {
+export const getAvailableName = (items: Node[], baseName: string): string => {
   if (!items.find((item) => item.name === baseName)) {
     return baseName;
   }
@@ -46,9 +43,9 @@ export const remapPath = (path: string[], from: string[], to: string[]) =>
  * Returns null if the path doesn't point to an existing folder.
  */
 export const getChildren = (
-  files: NodeType[],
+  files: Node[],
   parentPath: string[],
-): NodeType[] | null => {
+): Node[] | null => {
   if (parentPath.length === 0) return files;
   const parent = getNodeContent(parentPath, files);
   return parent && isFolder(parent) ? parent.files : null;
