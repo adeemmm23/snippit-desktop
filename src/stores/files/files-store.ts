@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 
 import { deepClone, getAvailableName, isDeepEqual } from "./utils";
 import { useEditorStore } from "../editor/editor-store";
-import { fsStorage } from "../storage";
+import { createFsStorage } from "../storage";
 
 import {
   isFile,
@@ -26,7 +26,7 @@ type FilesStore = {
   openedFiles: { path: string[]; count: number; openedAt: number }[];
   setFiles: (files: NodeType[]) => void;
   setActiveCollection: (id: string) => void;
-  createCollection: (name: string) => void;
+  createCollection: (name: string, files: NodeType[]) => void;
   deleteCollection: (id: string) => void;
   renameCollection: (id: string, name: string) => void;
   setActiveFile: (path: string[]) => void;
@@ -50,16 +50,16 @@ type FilesStore = {
   ensureIds: () => number;
 };
 
+const initialCollection: Collection = {
+  id: "0",
+  name: "Default",
+  files: [],
+};
+
 export const useFilesStore = create<FilesStore>()(
   persist(
     (set, get) => ({
-      collections: [
-        {
-          id: "0",
-          name: "Default",
-          files: [],
-        },
-      ],
+      collections: [initialCollection],
       activeCollection: "0",
       activeFile: [],
       currenFolder: [],
@@ -78,11 +78,14 @@ export const useFilesStore = create<FilesStore>()(
       },
       setActiveCollection: (id) => {
         const { collections } = get();
-        if (!collections.some((c) => c.id === id)) {
+        const { setTemplate } = useEditorStore.getState();
+
+        if (!collections.some((collection) => collection.id === id)) {
           return;
         }
-        const setTemplate = useEditorStore.getState().setTemplate;
+
         setTemplate("");
+
         set({
           activeCollection: id,
           activeFile: [],
@@ -90,41 +93,48 @@ export const useFilesStore = create<FilesStore>()(
           openedFiles: [],
         });
       },
-      createCollection: (name) => {
+      createCollection: (name, files) => {
         const { collections } = get();
 
-        if (collections.some((c) => c.id === name)) {
+        if (collections.some((collection) => collection.name === name)) {
           return;
         }
 
         const id = generateId();
+        const now = new Date().toISOString();
+
+        const newCollection = {
+          id,
+          name,
+          files: files || [],
+          updatedAt: now,
+          createdAt: now,
+        };
 
         set({
-          collections: [...collections, { id, name, files: [] }],
+          collections: [...collections, newCollection],
           activeCollection: id,
         });
       },
       deleteCollection: (id) => {
         const { collections, activeCollection } = get();
-
-        const updatedCollections = collections.filter((c) => c.id !== id);
+        const { setTemplate } = useEditorStore.getState();
 
         if (activeCollection === id) {
-          const setTemplate = useEditorStore.getState().setTemplate;
           setTemplate("");
         }
 
+        const filteredCollections = collections.filter(
+          (collection) => collection.id !== id,
+        );
+
+        const updatedCollections =
+          filteredCollections.length > 0
+            ? filteredCollections
+            : [initialCollection];
+
         set({
-          collections:
-            updatedCollections.length != 0
-              ? updatedCollections
-              : [
-                  {
-                    id: "0",
-                    name: "Default",
-                    files: [],
-                  },
-                ],
+          collections: updatedCollections,
           activeCollection:
             activeCollection === id
               ? updatedCollections[0].id
@@ -136,11 +146,15 @@ export const useFilesStore = create<FilesStore>()(
           }),
         });
       },
-      renameCollection: (id, name) => {
+      renameCollection: (id, newName) => {
         const { collections } = get();
 
-        const updatedCollections = collections.map((c) =>
-          c.id === id ? { ...c, name: name } : c,
+        const now = new Date().toISOString();
+
+        const updatedCollections = collections.map((collection) =>
+          collection.id === id
+            ? { ...collection, name: newName, updatedAt: now }
+            : collection,
         );
 
         set({
@@ -439,7 +453,7 @@ export const useFilesStore = create<FilesStore>()(
     }),
     {
       name: "files",
-      storage: createJSONStorage(() => fsStorage),
+      storage: createFsStorage,
     },
   ),
 );
