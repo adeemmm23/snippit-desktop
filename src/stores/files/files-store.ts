@@ -344,8 +344,11 @@ export const useFilesStore = create<FilesStore>()(
       moveItem: (oldPath, newPath) => {
         const { activeCollection, collections, activeFile, openedFiles } =
           get();
+
         const files =
-          collections.find((c) => c.id === activeCollection)?.files || [];
+          collections.find((collection) => collection.id === activeCollection)
+            ?.files || [];
+
         const newFiles = deepClone(files);
         const node = getNodeContent(oldPath, newFiles);
 
