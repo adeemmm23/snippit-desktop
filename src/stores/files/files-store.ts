@@ -33,7 +33,7 @@ type FilesStore = {
   openedFiles: { path: string[]; count: number; openedAt: number }[];
   setFiles: (files: NodeType[]) => void;
   setActiveCollection: (id: string) => void;
-  createCollection: (name: string, files: NodeType[]) => void;
+  createCollection: (name: string, files?: NodeType[]) => void;
   deleteCollection: (id: string) => void;
   renameCollection: (id: string, name: string) => void;
   setActiveFile: (path: string[]) => void;
