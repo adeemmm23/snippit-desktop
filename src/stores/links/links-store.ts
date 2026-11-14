@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 
-import { fsStorage } from "../storage";
+import { createFsStorage } from "../storage";
 
 export type LinkItem = {
   id: string;
@@ -63,7 +63,7 @@ export const useLinksStore = create<LinksStore>()(
     }),
     {
       name: "links",
-      storage: createJSONStorage(() => fsStorage),
+      storage: createFsStorage<LinksStore>(),
     },
   ),
 );

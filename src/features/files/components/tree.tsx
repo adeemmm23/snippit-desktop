@@ -22,6 +22,7 @@ import { isFile, isFolder, type NodeType } from "@/types/node.types";
 import { ScrollArea } from "@/ui/scroll-area";
 import { getNodeContent } from "@/utils/files.utils";
 
+// TODO: This approach is bad because it mess up the data and the view states, it has to change
 function markAsPublic(nodes: NodeType[]): NodeType[] {
   return nodes.map((node) => {
     if (node.type === "folder") {
@@ -151,6 +152,7 @@ export default function Tree() {
         if (!target) return;
 
         if (source?.id === target?.id) {
+          console.log(source);
           return;
         }
 
@@ -163,7 +165,7 @@ export default function Tree() {
           <div className="flex h-full w-full flex-col gap-2 p-2">
             {folders.map((node) => (
               <Node
-                key={node.name}
+                key={node.id}
                 node={node}
                 path={currentWorkingFolder.concat(node.name)}
                 onClick={() => {
@@ -175,7 +177,7 @@ export default function Tree() {
             ))}
             {files.map((node) => (
               <Node
-                key={node.name}
+                key={node.id}
                 node={node}
                 path={currentWorkingFolder.concat(node.name)}
                 isActive={

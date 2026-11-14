@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, type NodeType } from "@/types/node.types";
+import { isFile, isFolder, type NodeType } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -36,6 +36,19 @@ type NodeProps = {
   onClick: () => void;
 };
 
+function unmarkPublic(nodes: NodeType[]): NodeType[] {
+  return nodes.map((node) => {
+    if (node.type === "folder") {
+      const folder = { ...node, files: unmarkPublic(node.files) };
+      delete folder.isPublic;
+      return folder;
+    }
+    const file = { ...node };
+    delete file.isPublic;
+    return file;
+  });
+}
+
 export default function Node({ node, onClick, isActive, path }: NodeProps) {
   const removeItem = useFilesStore((state) => state.removeItem);
   const renameItem = useFilesStore((state) => state.renameItem);
@@ -46,17 +59,18 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
   const [isOpened, setIsOpened] = useState(false);
 
   const { isDragging, ref: nodeRef } = useDraggable({
-    id: path.join("/"),
+    id: node.id,
     data: {
       path,
-      name,
+      name: node.name,
     },
   });
 
   const { isDropTarget, ref: dropRef } = useDroppable({
-    id: path.join("/"),
+    id: node.id,
     data: {
       path,
+      name: node.name,
     },
   });
 
@@ -145,11 +159,15 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
                     <DropdownMenuGroup>
                       <DropdownMenuItem
                         onClick={() => {
+                          console.log(crypto.randomUUID());
                           createItem(
                             path,
                             node.type,
                             undefined,
                             isFile(node) ? node.content : undefined,
+                            isFolder(node)
+                              ? unmarkPublic(node.files)
+                              : undefined,
                           );
                         }}
                       >

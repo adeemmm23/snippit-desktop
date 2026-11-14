@@ -62,3 +62,40 @@ export const getOrCreateNodeContent = (
 
   return target;
 };
+
+export const generateId = (): string => crypto.randomUUID();
+
+export const assignMissingIds = (
+  nodes: NodeType[],
+): { nodes: NodeType[]; count: number } => {
+  let count = 0;
+
+  const walk = (items: NodeType[]): NodeType[] =>
+    items.map((node) => {
+      let id = node.id;
+      if (!id) {
+        id = generateId();
+        count++;
+      }
+      return node.type === "folder"
+        ? { ...node, id, files: walk(node.files) }
+        : { ...node, id };
+    });
+
+  return { nodes: walk(nodes), count };
+};
+
+export const PUBLIC_ID_PREFIX = "pub-";
+
+export const addPublicPrefix = (nodes: NodeType[]): NodeType[] =>
+  nodes.map((node) => {
+    const id = node.id
+      ? node.id.startsWith(PUBLIC_ID_PREFIX)
+        ? node.id
+        : `${PUBLIC_ID_PREFIX}${node.id}`
+      : `${PUBLIC_ID_PREFIX}${generateId()}`;
+
+    return node.type === "folder"
+      ? { ...node, id, files: addPublicPrefix(node.files) }
+      : { ...node, id };
+  });

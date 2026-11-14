@@ -1,3 +1,7 @@
+import { getVersion } from "@tauri-apps/api/app";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
 import { useSections } from "../context/sections-context";
 
 import { Button } from "@/ui/button";
@@ -30,6 +34,35 @@ export default function SettingsNavigation() {
             {section.title}
           </Button>
         ))}
+      <Version />
     </aside>
+  );
+}
+
+function Version() {
+  const [version, setVersion] = useState("");
+
+  useEffect(() => {
+    getVersion()
+      .then(setVersion)
+      .catch(() => {
+        setVersion("");
+      });
+  }, []);
+
+  if (!version) {
+    return null;
+  }
+
+  return (
+    <button
+      className="text-muted-foreground mt-auto cursor-pointer px-2.5 text-left text-xs select-none"
+      onClick={() => {
+        navigator.clipboard.writeText("v" + version);
+        toast.success("Version copied to clipboard");
+      }}
+    >
+      Snippit v{version}
+    </button>
   );
 }

@@ -12,6 +12,7 @@
     "core:window:allow-show",
     "core:menu:default",
     "core:event:default",
+    "core:app:allow-version",
     "dialog:default",
     "opener:default",
     "fs:allow-mkdir",

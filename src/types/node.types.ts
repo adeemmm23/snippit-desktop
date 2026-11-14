@@ -2,6 +2,8 @@ export type Collection = {
   id: string;
   name: string;
   files: NodeType[];
+  updatedAt?: string;
+  createdAt?: string;
 };
 
 export type FileType = {
@@ -10,6 +12,8 @@ export type FileType = {
   name: string;
   isPublic?: boolean;
   content: string;
+  updatedAt?: string;
+  createdAt?: string;
 };
 
 export type FolderType = {
@@ -18,6 +22,8 @@ export type FolderType = {
   name: string;
   isPublic?: boolean;
   files: NodeType[];
+  updatedAt?: string;
+  createdAt?: string;
 };
 
 export type NodeType = FileType | FolderType;
