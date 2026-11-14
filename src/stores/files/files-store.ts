@@ -198,9 +198,11 @@ export const useFilesStore = create<FilesStore>()(
       },
       addFiles: (newFiles, path, selecteCollection) => {
         const { collections, activeCollection } = get();
+
         const files =
           collections.find(
-            (c) => c.id === (selecteCollection ?? activeCollection),
+            (collection) =>
+              collection.id === (selecteCollection ?? activeCollection),
           )?.files || [];
 
         const updatedFiles = deepClone(files);
@@ -224,11 +226,11 @@ export const useFilesStore = create<FilesStore>()(
       },
       saveActiveFile: () => {
         const { activeFile, collections, activeCollection } = get();
+        const { template } = useEditorStore.getState();
 
         const files =
-          collections.find((c) => c.id === activeCollection)?.files || [];
-
-        const template = useEditorStore.getState().template;
+          collections.find((collection) => collection.id === activeCollection)
+            ?.files || [];
 
         if (activeFile.length === 0) return false;
 
