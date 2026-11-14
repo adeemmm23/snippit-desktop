@@ -15,9 +15,10 @@ export default function FolderHeader() {
   );
 
   const { isDropTarget, ref: dropRef } = useDroppable({
-    id: currentWorkingFolder.slice(0, -1).join("/"),
+    id: "folder-up",
     data: {
       path: currentWorkingFolder.slice(0, -1),
+      name: currentWorkingFolder[currentWorkingFolder.length - 1],
     },
   });
 

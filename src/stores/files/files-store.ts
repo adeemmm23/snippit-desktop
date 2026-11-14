@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { deepClone, getAvailableName, isDeepEqual } from "./utils";
+import {
+  deepClone,
+  getAvailableName,
+  getChildren,
+  isDeepEqual,
+  remapPath,
+  startsWithPath,
+} from "./utils";
 import { useEditorStore } from "../editor/editor-store";
 import { createFsStorage } from "../storage";
 
@@ -342,89 +349,69 @@ export const useFilesStore = create<FilesStore>()(
         set({ collections: updatedCollections, openedFiles: newOpenedFiles });
       },
       moveItem: (oldPath, newPath) => {
-        const { activeCollection, collections, activeFile, openedFiles } =
-          get();
+        const {
+          activeCollection,
+          collections,
+          activeFile,
+          currenFolder,
+          openedFiles,
+        } = get();
+
+        if (oldPath.length === 0 || newPath.length === 0) return;
+
+        const newParentPath = newPath.slice(0, -1);
+        if (startsWithPath(newParentPath, oldPath)) return;
 
         const files =
           collections.find((collection) => collection.id === activeCollection)
-            ?.files || [];
-
+            ?.files ?? [];
         const newFiles = deepClone(files);
-        const node = getNodeContent(oldPath, newFiles);
 
-        if (!node) {
-          return;
-        }
+        const oldParent = getChildren(newFiles, oldPath.slice(0, -1));
+        const newParent = getChildren(newFiles, newParentPath);
+        if (!oldParent || !newParent) return;
 
-        const oldParentNode = getNodeContent(oldPath.slice(0, -1), newFiles);
-        const oldParent =
-          oldParentNode && isFolder(oldParentNode)
-            ? oldParentNode.files
-            : newFiles;
+        const item = oldParent.find(
+          (node) => node.name === oldPath[oldPath.length - 1],
+        );
+        if (!item) return;
 
-        if (!oldParent) {
-          return;
-        }
-
-        const itemIndex = oldParent.findIndex(
-          (i: NodeType) => i.name === oldPath[oldPath.length - 1],
+        const finalName = getAvailableName(
+          newParent.filter((node) => node !== item),
+          newPath[newPath.length - 1],
         );
 
-        if (itemIndex === -1) {
-          return;
+        if (oldParent === newParent && finalName === item.name) return;
+
+        item.name = finalName;
+        if (oldParent !== newParent) {
+          oldParent.splice(oldParent.indexOf(item), 1);
+          newParent.push(item);
         }
 
-        const removedItem = oldParent.splice(itemIndex, 1)[0];
-        const newParentNode = getNodeContent(newPath.slice(0, -1), newFiles);
-        const newParent =
-          newParentNode && isFolder(newParentNode)
-            ? newParentNode.files
-            : newFiles;
+        const resolvedPath = [...newParentPath, finalName];
+        const remap = (path: string[]) =>
+          remapPath(path, oldPath, resolvedPath);
 
-        if (!newParent) {
-          oldParent.splice(itemIndex, 0, removedItem);
-          return;
-        }
-
-        const removedItemName = newPath[newPath.length - 1];
-        const finalName = getAvailableName(newParent, removedItemName);
-        removedItem.name = finalName;
-        newParent.push(removedItem);
-
-        if (activeFile.length > 0 && isDeepEqual(oldPath, activeFile)) {
-          set({ activeFile: newPath.slice(0, -1).concat([finalName]) });
-        }
-
-        const newOpenedFiles = openedFiles.filter((file) => {
-          if (isDeepEqual(file.path, oldPath)) {
-            return false;
-          }
-
-          if (file.path.length < oldPath.length) {
-            return true;
-          }
-
-          for (let i = 0; i < oldPath.length; i++) {
-            if (file.path[i] !== oldPath[i]) {
-              return true;
-            }
-          }
-
-          return false;
+        set({
+          collections: collections.map((collection) =>
+            collection.id === activeCollection
+              ? { ...collection, files: newFiles }
+              : collection,
+          ),
+          activeFile: remap(activeFile),
+          currenFolder: remap(currenFolder),
+          openedFiles: openedFiles.map((file) => ({
+            ...file,
+            path: remap(file.path),
+          })),
         });
-
-        const updatedCollections = collections.map((collection) => {
-          if (collection.id === activeCollection) {
-            return { ...collection, files: newFiles };
-          }
-          return collection;
-        });
-
-        set({ collections: updatedCollections, openedFiles: newOpenedFiles });
       },
       renameItem: (path, newName) => {
-        const { moveItem } = get();
-        moveItem(path, [...path.slice(0, -1), newName]);
+        const name = newName.trim();
+        if (!name) return;
+
+        get().moveItem(path, [...path.slice(0, -1), name]);
       },
       ensureIds: () => {
         const { collections, activeCollection } = get();

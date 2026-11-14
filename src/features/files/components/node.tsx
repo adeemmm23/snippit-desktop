@@ -59,17 +59,18 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
   const [isOpened, setIsOpened] = useState(false);
 
   const { isDragging, ref: nodeRef } = useDraggable({
-    id: path.join("/"),
+    id: node.id,
     data: {
       path,
-      name,
+      name: node.name,
     },
   });
 
   const { isDropTarget, ref: dropRef } = useDroppable({
-    id: path.join("/"),
+    id: node.id,
     data: {
       path,
+      name: node.name,
     },
   });
 
