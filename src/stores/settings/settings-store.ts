@@ -34,7 +34,7 @@ const useSettingsStore = create<SettingsStore>()(
           {},
           ...settingsSlices.map((createSlice) => createSlice(...args)),
         ),
-      { name: "settings", storage: createFsStorage },
+      { name: "settings", storage: createFsStorage<SettingsStore>() },
     ),
   ),
 );

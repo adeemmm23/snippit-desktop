@@ -63,4 +63,4 @@ const fsStorage: StateStorage = {
   },
 };
 
-export const createFsStorage = createJSONStorage(() => fsStorage);
+export const createFsStorage = <S>() => createJSONStorage<S>(() => fsStorage);

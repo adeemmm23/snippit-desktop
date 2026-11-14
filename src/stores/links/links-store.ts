@@ -63,7 +63,7 @@ export const useLinksStore = create<LinksStore>()(
     }),
     {
       name: "links",
-      storage: createFsStorage,
+      storage: createFsStorage<LinksStore>(),
     },
   ),
 );

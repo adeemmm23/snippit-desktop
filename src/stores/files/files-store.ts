@@ -453,7 +453,7 @@ export const useFilesStore = create<FilesStore>()(
     }),
     {
       name: "files",
-      storage: createFsStorage,
+      storage: createFsStorage<FilesStore>(),
     },
   ),
 );
