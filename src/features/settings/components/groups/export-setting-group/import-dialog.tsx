@@ -1,3 +1,5 @@
+import { DatabaseImportIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -80,7 +82,11 @@ export default function ImportDialog() {
         let nodes = fromTree(files, generateId);
 
         if (newVariableFormat !== variableFormat) {
-          nodes = changeVariableFormat(nodes, newVariableFormat, variableFormat);
+          nodes = changeVariableFormat(
+            nodes,
+            newVariableFormat,
+            variableFormat,
+          );
         }
 
         addNodes(nodes, importFolderId, selectedCollection);
@@ -103,7 +109,14 @@ export default function ImportDialog() {
         }
       }}
     >
-      <DialogTrigger render={<Button variant="outline">Import</Button>} />
+      <DialogTrigger
+        render={
+          <Button variant="outline">
+            <HugeiconsIcon icon={DatabaseImportIcon} />
+            Import
+          </Button>
+        }
+      />
       <DialogContent
         forceOverlayRender
         className="bg-popover select-none data-nested-dialog-open:scale-95"

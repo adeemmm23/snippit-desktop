@@ -1,5 +1,5 @@
-import { save } from "@tauri-apps/plugin-dialog"; // Tauri v2 dialog plugin
-import { writeTextFile } from "@tauri-apps/plugin-fs"; // Tauri v2 fs plugin
+import { DatabaseExportIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
 
 import { useFilesStore } from "@/stores/files/files-store";
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { saveExportFile } from "@/utils/export.utils";
 import { toTree } from "@/utils/files.utils";
 
 export default function ExportDialog() {
@@ -59,30 +60,13 @@ export default function ExportDialog() {
     if (!canConfirmExport) return;
 
     try {
-      const filePath = await save({
-        defaultPath: sanitizedExportFileName,
-        filters: [
-          {
-            name: "JSON Files",
-            extensions: ["json"],
-          },
-        ],
-      });
-
-      if (!filePath) return;
-
-      const data = {
-        // The export file keeps the nested format, so it stays readable and
-        // works as a public collection file.
-        files: toTree(nodes),
+      const saved = await saveExportFile(
+        sanitizedExportFileName,
+        toTree(nodes),
         variableFormat,
-      };
+      );
 
-      const fileContent = JSON.stringify(data, null, 2);
-
-      await writeTextFile(filePath, fileContent);
-
-      setExportOpen(false);
+      if (saved) setExportOpen(false);
     } catch (error) {
       console.error("Failed to export file:", error);
     }
@@ -90,7 +74,14 @@ export default function ExportDialog() {
 
   return (
     <Dialog open={exportOpen} onOpenChange={setExportOpen}>
-      <DialogTrigger render={<Button variant="outline">Export</Button>} />
+      <DialogTrigger
+        render={
+          <Button variant="outline">
+            <HugeiconsIcon icon={DatabaseExportIcon} />
+            Export
+          </Button>
+        }
+      />
       <DialogContent forceOverlayRender className="bg-popover select-none">
         <DialogHeader>
           <DialogTitle>Export snippets</DialogTitle>

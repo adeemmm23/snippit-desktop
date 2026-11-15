@@ -4,16 +4,20 @@ import {
   Download01Icon,
   File01Icon,
   FileCloudIcon,
+  FileExportIcon,
   Folder01Icon,
   FolderCloudIcon,
+  FolderExportIcon,
   InputCursorTextIcon,
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useFilesStore } from "@/stores/files/files-store";
+import useSettingsStore from "@/stores/settings/settings-store";
 import { isFolder, type TreeItem } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
@@ -24,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/dropdown-menu";
 import { cn } from "@/utils/cn";
+import { saveExportFile } from "@/utils/export.utils";
+import { toTree } from "@/utils/files.utils";
 
 type NodeProps = {
   item: TreeItem;
@@ -34,7 +40,12 @@ type NodeProps = {
   onDownload: () => void;
 };
 
-export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) {
+export default function Node({
+  item,
+  onOpen,
+  onDownload,
+  isActive,
+}: NodeProps) {
   const { node, origin } = item;
   const isPublic = origin === "public";
 
@@ -69,6 +80,28 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
 
   const handleRenameCancel = () => {
     setIsRenaming(false);
+  };
+
+  // Exports this node and everything below it, in the same file format as the
+  // Import / Export settings. The store is read on click, so rows don't
+  // re-render when other nodes change.
+  const handleExport = async () => {
+    const { collections, activeCollection } = useFilesStore.getState();
+    const nodes = collections.find((c) => c.id === activeCollection)?.nodes;
+    if (!nodes) return;
+
+    try {
+      const saved = await saveExportFile(
+        `${node.name.replace(/[<>:"/\\|?*]/g, "_")}.json`,
+        toTree(nodes, node.id),
+        useSettingsStore.getState().variableFormat,
+      );
+
+      if (saved) toast.success(`Exported ${node.name}`);
+    } catch (error) {
+      console.error("Failed to export node:", error);
+      toast.error(`Could not export ${node.name}`);
+    }
   };
 
   const isDraggingOver = isFolder(node) && isDropTarget && !isDragging;
@@ -165,6 +198,17 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                         Delete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleExport}>
+                        <HugeiconsIcon
+                          icon={
+                            node.type === "file"
+                              ? FileExportIcon
+                              : FolderExportIcon
+                          }
+                          className="size-4"
+                        />
+                        Export
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                   )}

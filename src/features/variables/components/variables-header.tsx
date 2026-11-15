@@ -14,20 +14,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 import { cn } from "@/utils/cn";
 
 export default function VariablesHeader() {
-  const resetVariables = useEditorStore((state) => state.resetVariables);
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        resetVariables();
-      }
-    };
-
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
-
   return (
     <div className="flex items-center justify-between p-2">
       <Label className="px-2 text-lg font-medium">Variables</Label>
@@ -104,6 +90,18 @@ function ResetVariablesButton() {
       clearTimeout(timeout);
     };
   }, [variables, resetVariables, isTimerEnabled, timerDuration]);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        resetVariables();
+      }
+    };
+
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
   return (
     <Tooltip>

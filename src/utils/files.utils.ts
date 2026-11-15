@@ -197,18 +197,26 @@ export const fromTree = (
   return out;
 };
 
-/** Nodes -> nested data, for export. Ids are left out: importing gives new ones anyway. */
-export const toTree = (nodes: NodeMap): TreeNode[] => {
+/**
+ * Nodes -> nested data, for export. Ids are left out: importing gives new ones anyway.
+ * Pass `nodeId` to export only that node and everything below it.
+ */
+export const toTree = (nodes: NodeMap, nodeId?: string): TreeNode[] => {
   const children = buildChildrenIndex(nodes);
 
-  const walk = (parentId: string | null): TreeNode[] =>
-    (children.get(parentId) ?? []).map((node) =>
-      isFolder(node)
-        ? { type: "folder", name: node.name, files: walk(node.id) }
-        : { type: "file", name: node.name, content: node.content },
-    );
+  const convert = (node: NodeType): TreeNode =>
+    isFolder(node)
+      ? {
+          type: "folder",
+          name: node.name,
+          files: (children.get(node.id) ?? []).map(convert),
+        }
+      : { type: "file", name: node.name, content: node.content };
 
-  return walk(null);
+  if (nodeId === undefined) return (children.get(null) ?? []).map(convert);
+
+  const node = nodes[nodeId];
+  return node ? [convert(node)] : [];
 };
 
 /**
