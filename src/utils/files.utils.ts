@@ -8,9 +8,9 @@ import {
 
 export const generateId = (): string => crypto.randomUUID();
 
-/* -------------------------------------------------------------------------- */
-/*                                   Reading                                  */
-/* -------------------------------------------------------------------------- */
+/**
+ * Reading
+ */
 
 /** parentId -> children. `null` is the root. */
 export type ChildrenIndex = Map<string | null, NodeType[]>;
@@ -107,9 +107,9 @@ export const getFileContent = (nodes: NodeMap, id: string): string | null => {
   return node && isFile(node) ? node.content : null;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                   Naming                                   */
-/* -------------------------------------------------------------------------- */
+/**
+ * Naming
+ */
 
 /**
  * A name that is free among `siblings` of the same type, so a file and a
@@ -132,9 +132,9 @@ export const getAvailableName = (
   return name;
 };
 
-/* -------------------------------------------------------------------------- */
-/*                  Untrusted data, file formats, public ids                  */
-/* -------------------------------------------------------------------------- */
+/**
+ *  Untrusted data, file formats, public ids
+ */
 
 type IdFactory = (trail: string[], type: NodeType["type"]) => string;
 
@@ -226,9 +226,9 @@ export const makePublicIdFactory =
 export const isPublicId = (id: string | null): boolean =>
   id !== null && id.startsWith("public:");
 
-/* -------------------------------------------------------------------------- */
-/*                                   Search                                   */
-/* -------------------------------------------------------------------------- */
+/**
+ * Search
+ */
 
 export type IndexedFile = {
   id: string;
