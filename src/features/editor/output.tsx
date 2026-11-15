@@ -82,9 +82,9 @@ export function Output() {
             <span
               key={index}
               className={cn(
-                part.type == "variable" &&
+                part.type === "variable" &&
                   "dark:text-primary text-primary-foreground",
-                part.type == "comment" &&
+                part.type === "comment" &&
                   "dark:text-muted-foreground text-muted-foreground italic",
               )}
             >

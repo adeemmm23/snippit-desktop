@@ -65,5 +65,5 @@ function formatRange(dateRange: DateRange | undefined) {
   const diffTime = Math.abs(to.getTime() - from.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  return `${diffDays} day${diffDays == 1 ? "" : "s"}`;
+  return `${diffDays} day${diffDays === 1 ? "" : "s"}`;
 }

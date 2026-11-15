@@ -1,12 +1,9 @@
-import { Warning } from "@hugeicons/core-free-icons";
+import { DatabaseExportIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { save } from "@tauri-apps/plugin-dialog"; // Tauri v2 dialog plugin
-import { writeTextFile } from "@tauri-apps/plugin-fs"; // Tauri v2 fs plugin
 import { useMemo, useState } from "react";
 
 import { useFilesStore } from "@/stores/files/files-store";
 import useSettingsStore from "@/stores/settings/settings-store";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/ui/alert";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -28,8 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import { Switch } from "@/ui/switch";
-import { addPublicPrefix } from "@/utils/files.utils";
+import { saveExportFile } from "@/utils/export.utils";
+import { toTree } from "@/utils/files.utils";
 
 export default function ExportDialog() {
   const collections = useFilesStore((state) => state.collections);
@@ -44,13 +41,12 @@ export default function ExportDialog() {
     useState(activeCollection);
 
   const nodes =
-    collections.find((c) => c.id === selectedCollection)?.files || [];
+    collections.find((c) => c.id === selectedCollection)?.nodes ?? {};
 
   const variableFormat = useSettingsStore((state) => state.variableFormat);
 
   const [exportOpen, setExportOpen] = useState(false);
   const [exportFileName, setExportFileName] = useState("snippets.json");
-  const [isPublic, setIsPublic] = useState(false);
 
   const sanitizedExportFileName = useMemo(() => {
     const trimmed = exportFileName.trim();
@@ -64,30 +60,13 @@ export default function ExportDialog() {
     if (!canConfirmExport) return;
 
     try {
-      const filePath = await save({
-        defaultPath: sanitizedExportFileName,
-        filters: [
-          {
-            name: "JSON Files",
-            extensions: ["json"],
-          },
-        ],
-      });
-
-      if (!filePath) return;
-
-      const files = isPublic ? addPublicPrefix(nodes) : nodes;
-
-      const data = {
-        files,
+      const saved = await saveExportFile(
+        sanitizedExportFileName,
+        toTree(nodes),
         variableFormat,
-      };
+      );
 
-      const fileContent = JSON.stringify(data, null, 2);
-
-      await writeTextFile(filePath, fileContent);
-
-      setExportOpen(false);
+      if (saved) setExportOpen(false);
     } catch (error) {
       console.error("Failed to export file:", error);
     }
@@ -95,7 +74,14 @@ export default function ExportDialog() {
 
   return (
     <Dialog open={exportOpen} onOpenChange={setExportOpen}>
-      <DialogTrigger render={<Button variant="outline">Export</Button>} />
+      <DialogTrigger
+        render={
+          <Button variant="outline">
+            <HugeiconsIcon icon={DatabaseExportIcon} />
+            Export
+          </Button>
+        }
+      />
       <DialogContent forceOverlayRender className="bg-popover select-none">
         <DialogHeader>
           <DialogTitle>Export snippets</DialogTitle>
@@ -133,25 +119,6 @@ export default function ExportDialog() {
             placeholder="snippets.json"
           />
         </div>
-        <Alert>
-          <HugeiconsIcon icon={Warning} />
-          <AlertTitle>Public IDs</AlertTitle>
-          <AlertDescription>
-            Adds a{" "}
-            <code className="bg-muted text-muted-foreground rounded-sm px-1 py-0.5 font-mono text-xs">
-              pub
-            </code>{" "}
-            prefix to the ID of every file and folder in the export.
-          </AlertDescription>
-          <AlertAction>
-            <Switch
-              id="exportPublicIds"
-              aria-label="Add pub- prefix to exported IDs"
-              checked={isPublic}
-              onCheckedChange={(checked) => setIsPublic(!!checked)}
-            />
-          </AlertAction>
-        </Alert>
         <DialogFooter>
           <Button variant="outline" onClick={() => setExportOpen(false)}>
             Cancel

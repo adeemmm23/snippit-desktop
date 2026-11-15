@@ -1,18 +1,16 @@
+import { useCollectionNodes } from "@/hooks/use-collection-nodes";
 import { useEditorStore } from "@/stores/editor/editor-store";
 import { useFilesStore } from "@/stores/files/files-store";
-import { isFile } from "@/types/node.types";
-import { getNodeContent } from "@/utils/files.utils";
+import { getFileContent } from "@/utils/files.utils";
 
 export default function SaveIndicator() {
-  const activeFilePath = useFilesStore((state) => state.activeFile);
-  const collections = useFilesStore((state) => state.collections);
-  const activeCollection = useFilesStore((state) => state.activeCollection);
-  const files = collections.find((c) => c.id === activeCollection)?.files || [];
-
-  const node = getNodeContent(activeFilePath, files);
+  const activeFileId = useFilesStore((state) => state.activeFileId);
+  const { local } = useCollectionNodes();
   const template = useEditorStore((state) => state.template);
 
-  const isUnsaved = Boolean(node && isFile(node) && node.content !== template);
+  // Only local files can be saved; public ones are read-only, so no dot for them.
+  const saved = activeFileId === null ? null : getFileContent(local, activeFileId);
+  const isUnsaved = saved !== null && saved !== template;
 
   return (
     <span

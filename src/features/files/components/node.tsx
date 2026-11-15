@@ -4,17 +4,21 @@ import {
   Download01Icon,
   File01Icon,
   FileCloudIcon,
+  FileExportIcon,
   Folder01Icon,
   FolderCloudIcon,
+  FolderExportIcon,
   InputCursorTextIcon,
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import useSettingsStore from "@/stores/settings/settings-store";
+import { isFolder, type TreeItem } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -24,54 +28,44 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/dropdown-menu";
 import { cn } from "@/utils/cn";
+import { saveExportFile } from "@/utils/export.utils";
+import { toTree } from "@/utils/files.utils";
 
 type NodeProps = {
-  // name: string;
-  // type: "file" | "folder";
-  node: NodeType;
-  path: string[];
+  item: TreeItem;
   isActive?: boolean;
-  // isPublic?: boolean;
-  // content?: string;
-  onClick: () => void;
+  /** Open the file, or step into the folder. */
+  onOpen: () => void;
+  /** Copy a public item into the local collection. */
+  onDownload: () => void;
 };
 
-function unmarkPublic(nodes: NodeType[]): NodeType[] {
-  return nodes.map((node) => {
-    if (node.type === "folder") {
-      const folder = { ...node, files: unmarkPublic(node.files) };
-      delete folder.isPublic;
-      return folder;
-    }
-    const file = { ...node };
-    delete file.isPublic;
-    return file;
-  });
-}
+export default function Node({
+  item,
+  onOpen,
+  onDownload,
+  isActive,
+}: NodeProps) {
+  const { node, origin } = item;
+  const isPublic = origin === "public";
 
-export default function Node({ node, onClick, isActive, path }: NodeProps) {
   const removeItem = useFilesStore((state) => state.removeItem);
   const renameItem = useFilesStore((state) => state.renameItem);
-  const createItem = useFilesStore((state) => state.createItem);
 
   const [isRenaming, setIsRenaming] = useState(false);
-  // const [isSelected, setIsSelected] = useState(false);
-  const [isOpened, setIsOpened] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Public items are read-only: they can't be dragged, and nothing can be dropped on them.
   const { isDragging, ref: nodeRef } = useDraggable({
     id: node.id,
-    data: {
-      path,
-      name: node.name,
-    },
+    disabled: isPublic,
+    data: { name: node.name },
   });
 
   const { isDropTarget, ref: dropRef } = useDroppable({
     id: node.id,
-    data: {
-      path,
-      name: node.name,
-    },
+    disabled: isPublic || !isFolder(node),
+    data: { folderId: node.id },
   });
 
   const handleRenameStart = (e: React.MouseEvent) => {
@@ -80,7 +74,7 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
   };
 
   const handleRenameEnd = (newName: string) => {
-    renameItem(path, newName);
+    renameItem(node.id, newName);
     setIsRenaming(false);
   };
 
@@ -88,7 +82,29 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
     setIsRenaming(false);
   };
 
-  const isDraggingOver = node.type == "folder" && isDropTarget && !isDragging;
+  // Exports this node and everything below it, in the same file format as the
+  // Import / Export settings. The store is read on click, so rows don't
+  // re-render when other nodes change.
+  const handleExport = async () => {
+    const { collections, activeCollection } = useFilesStore.getState();
+    const nodes = collections.find((c) => c.id === activeCollection)?.nodes;
+    if (!nodes) return;
+
+    try {
+      const saved = await saveExportFile(
+        `${node.name.replace(/[<>:"/\\|?*]/g, "_")}.json`,
+        toTree(nodes, node.id),
+        useSettingsStore.getState().variableFormat,
+      );
+
+      if (saved) toast.success(`Exported ${node.name}`);
+    } catch (error) {
+      console.error("Failed to export node:", error);
+      toast.error(`Could not export ${node.name}`);
+    }
+  };
+
+  const isDraggingOver = isFolder(node) && isDropTarget && !isDragging;
 
   // TODO: check styling
   return (
@@ -106,26 +122,25 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
           <div
             ref={(n) => {
               nodeRef(n);
-              if (node.type == "folder") dropRef(n);
+              if (isFolder(node)) dropRef(n);
             }}
             role="button"
             tabIndex={0}
             title={node.name}
-            data-path={path.join("/")}
             onDoubleClick={(e) => {
               e.stopPropagation();
               if (!isRenaming) {
-                onClick();
+                onOpen();
               }
             }}
           >
             <HugeiconsIcon
               icon={
-                node.type == "file"
-                  ? node.isPublic
+                node.type === "file"
+                  ? isPublic
                     ? FileCloudIcon
                     : File01Icon
-                  : node.isPublic
+                  : isPublic
                     ? FolderCloudIcon
                     : Folder01Icon
               }
@@ -155,22 +170,9 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
                   }
                 />
                 <DropdownMenuContent align="end">
-                  {node.isPublic ? (
+                  {isPublic ? (
                     <DropdownMenuGroup>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          console.log(crypto.randomUUID());
-                          createItem(
-                            path,
-                            node.type,
-                            undefined,
-                            isFile(node) ? node.content : undefined,
-                            isFolder(node)
-                              ? unmarkPublic(node.files)
-                              : undefined,
-                          );
-                        }}
-                      >
+                      <DropdownMenuItem onClick={onDownload}>
                         <HugeiconsIcon
                           icon={Download01Icon}
                           className="size-4"
@@ -191,11 +193,22 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
                         variant="destructive"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setIsOpened(true);
+                          setIsDeleteDialogOpen(true);
                         }}
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                         Delete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleExport}>
+                        <HugeiconsIcon
+                          icon={
+                            node.type === "file"
+                              ? FileExportIcon
+                              : FolderExportIcon
+                          }
+                          className="size-4"
+                        />
+                        Export
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                   )}
@@ -206,15 +219,15 @@ export default function Node({ node, onClick, isActive, path }: NodeProps) {
         }
       ></Button>
       <ConfirmDialog
-        open={isOpened}
-        onOpenChange={setIsOpened}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
         title={`Remove ${node.type}`}
         description={`Are you sure you want to remove ${node.name}?`}
         confirmLabel="Delete"
         destructive
         onConfirm={() => {
-          removeItem(path);
-          setIsOpened(false);
+          removeItem(node.id);
+          setIsDeleteDialogOpen(false);
         }}
       />
     </>

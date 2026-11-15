@@ -2,33 +2,32 @@ import { readTextFile } from "@tauri-apps/plugin-fs";
 import { create } from "zustand";
 
 import useSettingsStore from "@/stores/settings/settings-store";
-import type { Collection } from "@/types/node.types";
+import type { NodeMap } from "@/types/node.types";
+import { fromTree, makePublicIdFactory } from "@/utils/files.utils";
 
-export type PublicCollection = Collection & {
-  sourcePath: string;
+/** A read-only set of nodes, matched to a local collection by name. */
+export type PublicCollection = {
+  name: string;
+  nodes: NodeMap;
 };
 
 type PublicCollectionsState = {
   collections: PublicCollection[];
-  isLoading: boolean;
   loadPublicCollections: () => Promise<void>;
 };
 
 export const usePublicCollectionsStore = create<PublicCollectionsState>(
   (set) => ({
     collections: [],
-    isLoading: false,
 
     loadPublicCollections: async () => {
-      set({ isLoading: true });
       const enabledPublicPaths = useSettingsStore.getState().publicCollections;
 
       const loadedCollections: PublicCollection[] = [];
 
       for (const filePath of enabledPublicPaths) {
         try {
-          const content = await readTextFile(filePath);
-          const parsed = JSON.parse(content);
+          const parsed = JSON.parse(await readTextFile(filePath));
 
           if (parsed && Array.isArray(parsed.files)) {
             const fileName =
@@ -36,10 +35,8 @@ export const usePublicCollectionsStore = create<PublicCollectionsState>(
               "Collection";
 
             loadedCollections.push({
-              id: `public_${filePath}`,
               name: parsed.name || fileName,
-              files: parsed.files,
-              sourcePath: filePath,
+              nodes: fromTree(parsed.files, makePublicIdFactory(filePath)),
             });
           }
         } catch (err) {
@@ -50,7 +47,7 @@ export const usePublicCollectionsStore = create<PublicCollectionsState>(
         }
       }
 
-      set({ collections: loadedCollections, isLoading: false });
+      set({ collections: loadedCollections });
     },
   }),
 );

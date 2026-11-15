@@ -7,9 +7,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { IT_SUPPORT_SNIPPETS } from "@/constants/test.constants";
+import { useFolderView } from "@/hooks/use-collection-nodes";
 import { useFilesStore } from "@/stores/files/files-store";
 import { Button } from "@/ui/button";
 import {
@@ -30,13 +30,13 @@ import {
 } from "@/ui/dropdown-menu";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
+import { fromTree, generateId } from "@/utils/files.utils";
 
 export default function Menu() {
   const createItem = useFilesStore((state) => state.createItem);
   const createCollection = useFilesStore((state) => state.createCollection);
-  const setFiles = useFilesStore((state) => state.setFiles);
-  const currentWorkingFolder = useFilesStore((state) => state.currenFolder);
-  const ensureIds = useFilesStore((state) => state.ensureIds);
+  const ensureFolderPath = useFilesStore((state) => state.ensureFolderPath);
+  const view = useFolderView();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createType, setCreateType] = useState<"file" | "folder">("file");
@@ -58,7 +58,14 @@ export default function Menu() {
 
   const handleCreateItem = () => {
     if (createName.trim().length === 0) return;
-    createItem([...currentWorkingFolder, createName.trim()], createType);
+
+    // The folder on screen may exist only in the public collection;
+    // in that case its local twin is created first.
+    const parentId = view.local
+      ? view.local.id
+      : ensureFolderPath(view.namePath);
+
+    createItem(parentId, createType, createName.trim());
     setCreateDialogOpen(false);
   };
 
@@ -91,28 +98,14 @@ export default function Menu() {
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                createCollection("IT Support Snippets");
-                const newFiles = JSON.parse(
-                  JSON.stringify(IT_SUPPORT_SNIPPETS),
+                createCollection(
+                  "IT Support Snippets",
+                  fromTree(IT_SUPPORT_SNIPPETS, generateId),
                 );
-                setFiles(newFiles);
               }}
             >
               <HugeiconsIcon icon={PackageAdd01Icon} className="size-4" />
               Dummy
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                const count = ensureIds();
-                toast.success(
-                  count === 0
-                    ? "Every item already has an id"
-                    : `Generated ${count} ids`,
-                );
-              }}
-            >
-              <HugeiconsIcon icon={Refresh01Icon} className="size-4" />
-              Fix IDs
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

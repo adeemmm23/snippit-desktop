@@ -1,10 +1,14 @@
-import { Search01Icon } from "@hugeicons/core-free-icons";
+import {
+  File01Icon,
+  FileCloudIcon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { useEditorStore } from "@/stores/editor/editor-store";
-import { useFilesStore } from "@/stores/files/files-store";
-import { isFile, isFolder, type NodeType } from "@/types/node.types";
+import { useCollectionNodes } from "@/hooks/use-collection-nodes";
+import { useOpenFile } from "@/hooks/use-open-file";
+import { NO_OPENED_FILES, useFilesStore } from "@/stores/files/files-store";
 import { Button } from "@/ui/button";
 import {
   Command,
@@ -16,65 +20,73 @@ import {
   CommandList,
 } from "@/ui/command";
 import { Kbd, KbdGroup } from "@/ui/kbd";
+import { indexFiles, type IndexedFile } from "@/utils/files.utils";
+
+type SearchFile = IndexedFile & { isPublic: boolean };
 
 export default function SearchBar() {
-  const openedFiles = useFilesStore((state) => state.openedFiles);
-  const collections = useFilesStore((state) => state.collections);
-  const activeCollection = useFilesStore((state) => state.activeCollection);
-  const files = collections.find((c) => c.id === activeCollection)?.files || [];
+  // The history of the active collection only; each collection keeps its own.
+  const openedFiles = useFilesStore(
+    (state) => state.openedFiles[state.activeCollection] ?? NO_OPENED_FILES,
+  );
+  const { local, publicNodes } = useCollectionNodes();
+  const openFile = useOpenFile();
 
-  const [open, setOpen] = useState<boolean>(false);
-  const [query, setQuery] = useState<string>("");
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
-  const indexedFiles = flattenFiles(files, "");
+  // Local files plus public ones, except public files a local file with the
+  // same path replaces (the folder view hides those too).
+  const indexedFiles = useMemo<SearchFile[]>(() => {
+    const localFiles = indexFiles(local).map((f) => ({
+      ...f,
+      isPublic: false,
+    }));
+    if (!publicNodes) return localFiles;
 
-  const generateMostOpened = () => {
-    return openedFiles
-      .sort(
+    const localPaths = new Set(localFiles.map((f) => f.path));
+    const publicOnly = indexFiles(publicNodes)
+      .filter((f) => !localPaths.has(f.path))
+      .map((f) => ({ ...f, isPublic: true }));
+
+    return [...localFiles, ...publicOnly];
+  }, [local, publicNodes]);
+
+  const byId = useMemo(
+    () => new Map(indexedFiles.map((f) => [f.id, f])),
+    [indexedFiles],
+  );
+
+  const renderFile = (file: SearchFile) => (
+    <FileItem
+      key={file.id}
+      file={file}
+      onSelect={() => {
+        openFile(file.id);
+        setOpen(false);
+      }}
+    />
+  );
+
+  const toItems = (list: typeof openedFiles) =>
+    list
+      .map((entry) => byId.get(entry.id))
+      .filter((file): file is SearchFile => file !== undefined)
+      .slice(0, 3)
+      .map(renderFile);
+
+  // Sort copies: the array in the store must never be mutated.
+  const generateMostOpened = () =>
+    toItems(
+      [...openedFiles].sort(
         (a, b) => getScore(b.count, b.openedAt) - getScore(a.count, a.openedAt),
-      )
-      .slice(0, 3)
-      .map((fileData, index) => {
-        const file = indexedFiles.find(
-          (f) => f.path === fileData.path.join("/"),
-        );
-        if (!file) return null;
+      ),
+    );
 
-        return (
-          <FileItem
-            key={index}
-            file={file}
-            onSelectEnd={() => setOpen(false)}
-          />
-        );
-      });
-  };
+  const generateLatest = () =>
+    toItems([...openedFiles].sort((a, b) => b.openedAt - a.openedAt));
 
-  const generateLatest = () => {
-    return openedFiles
-      .sort((a, b) => b.openedAt - a.openedAt)
-      .slice(0, 3)
-      .map((fileData, index) => {
-        const file = indexedFiles.find(
-          (f) => f.path === fileData.path.join("/"),
-        );
-        if (!file) return null;
-
-        return (
-          <FileItem
-            key={index}
-            file={file}
-            onSelectEnd={() => setOpen(false)}
-          />
-        );
-      });
-  };
-
-  const generatePreview = () => {
-    return indexedFiles.map((file, index) => (
-      <FileItem key={index} file={file} onSelectEnd={() => setOpen(false)} />
-    ));
-  };
+  const generatePreview = () => indexedFiles.map(renderFile);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -120,7 +132,7 @@ export default function SearchBar() {
             <CommandEmpty>
               {query.length > 0 ? "No results found." : "Search for a file"}
             </CommandEmpty>
-            {query.length == 0 && openedFiles.length > 0 && (
+            {query.length === 0 && openedFiles.length > 0 && (
               <>
                 <CommandGroup heading="Most opened">
                   {generateMostOpened()}
@@ -139,54 +151,22 @@ export default function SearchBar() {
 }
 
 type FileItemProps = {
-  file: { filename: string; path: string; content: string };
-  onSelectEnd: () => void;
+  file: SearchFile;
+  onSelect: () => void;
 };
 
-function FileItem({ file, onSelectEnd }: FileItemProps) {
-  const setActiveFilePath = useFilesStore((state) => state.setActiveFile);
-  const setTemplate = useEditorStore((state) => state.setTemplate);
-
+function FileItem({ file, onSelect }: FileItemProps) {
   return (
-    <CommandItem
-      className="gap-5"
-      onSelect={() => {
-        setTemplate(file.content);
-        setActiveFilePath(file.path.split("/"));
-        onSelectEnd();
-      }}
-    >
-      <span className="shrink-0 truncate">{file.filename}</span>
-      <span className="text-muted-foreground grow truncate text-right text-xs">
-        {file.path}
+    // `value` carries the path so the command filter matches on it; ids are never shown.
+    <CommandItem value={file.path} onSelect={onSelect}>
+      <HugeiconsIcon icon={file.isPublic ? FileCloudIcon : File01Icon} />
+      <span className="shrink-0 truncate">{file.name}</span>
+      <span className="text-muted-foreground grow truncate text-xs" dir="rtl">
+        Root/{file.path}
       </span>
     </CommandItem>
   );
 }
-
-// TODO: content shouldn't be shipped from here
-const flattenFiles = (
-  items: NodeType[],
-  prefix: string,
-): { filename: string; path: string; content: string }[] => {
-  const result: { filename: string; path: string; content: string }[] = [];
-
-  for (const item of items) {
-    const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
-
-    if (isFile(item)) {
-      result.push({
-        filename: item.name,
-        path: fullPath,
-        content: item.content,
-      });
-    } else if (isFolder(item)) {
-      result.push(...flattenFiles(item.files, fullPath));
-    }
-  }
-
-  return result;
-};
 
 const getScore = (count: number, lastOpenedAt: number) => {
   const now = Date.now();

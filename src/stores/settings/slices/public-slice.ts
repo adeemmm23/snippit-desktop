@@ -104,7 +104,7 @@ export const createPublicSlice: StateCreator<PublicSlice> = (set) => ({
             ?.toLowerCase(),
       );
 
-      const hasFiles = (collection?.files.length ?? 0) > 0;
+      const hasFiles = Object.keys(collection?.nodes ?? {}).length > 0;
 
       if (!hasFiles) {
         useFilesStore.getState().deleteCollection(collection?.id || "");

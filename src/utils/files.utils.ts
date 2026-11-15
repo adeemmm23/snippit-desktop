@@ -1,101 +1,258 @@
-import type { NodeType } from "@/types/node.types";
-
-export const getNodeContent = (
-  path: string[],
-  files: NodeType[],
-): NodeType | null => {
-  if (path.length === 0) return null;
-
-  let current = files;
-
-  for (let i = 0; i < path.length - 1; i++) {
-    const next = current.find((item) => item.name === path[i]);
-    if (!next) return null;
-    if (next.type === "file") return next;
-    current = next.files;
-  }
-
-  return current.find((item) => item.name === path[path.length - 1]) ?? null;
-};
-
-export const getOrCreateNodeContent = (
-  path: string[],
-  files: NodeType[],
-  type: "file" | "folder" = "folder",
-  content: string = "",
-): NodeType | null => {
-  if (path.length === 0) return null;
-
-  let current = files;
-
-  for (let i = 0; i < path.length - 1; i++) {
-    const segment = path[i];
-    let next = current.find((item) => item.name === segment);
-
-    if (!next) {
-      const now =
-        Date.now().toString() + Math.random().toString(36).substring(2, 5);
-      next = {
-        id: now,
-        type: "folder",
-        name: segment,
-        files: [],
-      };
-      current.push(next);
-    }
-
-    if (next.type === "file") return next;
-    current = next.files;
-  }
-
-  const lastName = path[path.length - 1];
-  let target = current.find((item) => item.name === lastName);
-
-  if (!target) {
-    const now = Date.now().toString();
-    target =
-      type === "file"
-        ? { id: now, type: "file", name: lastName, content }
-        : { id: now, type: "folder", name: lastName, files: [] };
-    current.push(target);
-  }
-
-  return target;
-};
+import {
+  isFile,
+  isFolder,
+  type NodeMap,
+  type NodeType,
+  type TreeNode,
+} from "@/types/node.types";
 
 export const generateId = (): string => crypto.randomUUID();
 
-export const assignMissingIds = (
-  nodes: NodeType[],
-): { nodes: NodeType[]; count: number } => {
-  let count = 0;
+/**
+ * Reading
+ */
 
-  const walk = (items: NodeType[]): NodeType[] =>
-    items.map((node) => {
-      let id = node.id;
-      if (!id) {
-        id = generateId();
-        count++;
-      }
-      return node.type === "folder"
-        ? { ...node, id, files: walk(node.files) }
-        : { ...node, id };
-    });
+/** parentId -> children. `null` is the root. */
+export type ChildrenIndex = Map<string | null, NodeType[]>;
 
-  return { nodes: walk(nodes), count };
+/** A collection's nodes together with the index that lists a folder's children. */
+export type NodeTree = { nodes: NodeMap; children: ChildrenIndex };
+
+export const buildChildrenIndex = (nodes: NodeMap): ChildrenIndex => {
+  const index: ChildrenIndex = new Map();
+
+  for (const node of Object.values(nodes)) {
+    const list = index.get(node.parentId);
+    if (list) list.push(node);
+    else index.set(node.parentId, [node]);
+  }
+
+  return index;
 };
 
-export const PUBLIC_ID_PREFIX = "pub-";
+/** Build once per change (in a `useMemo`), then every "list this folder" is a lookup. */
+export const makeNodeTree = (nodes: NodeMap): NodeTree => ({
+  nodes,
+  children: buildChildrenIndex(nodes),
+});
 
-export const addPublicPrefix = (nodes: NodeType[]): NodeType[] =>
-  nodes.map((node) => {
-    const id = node.id
-      ? node.id.startsWith(PUBLIC_ID_PREFIX)
-        ? node.id
-        : `${PUBLIC_ID_PREFIX}${node.id}`
-      : `${PUBLIC_ID_PREFIX}${generateId()}`;
+/** The chain from the root down to the node, the node included. Empty if the id doesn't exist. */
+export const getAncestry = (nodes: NodeMap, id: string): NodeType[] => {
+  const chain: NodeType[] = [];
+  const seen = new Set<string>();
+  let node: NodeType | undefined = nodes[id];
 
-    return node.type === "folder"
-      ? { ...node, id, files: addPublicPrefix(node.files) }
-      : { ...node, id };
-  });
+  // `seen` only guards against corrupt data where parents form a loop.
+  while (node && !seen.has(node.id)) {
+    seen.add(node.id);
+    chain.unshift(node);
+    node = node.parentId === null ? undefined : nodes[node.parentId];
+  }
+
+  return chain;
+};
+
+/** True if `id` is `ancestorId` itself or lives anywhere below it. */
+export const isInside = (
+  nodes: NodeMap,
+  id: string,
+  ancestorId: string,
+): boolean => getAncestry(nodes, id).some((node) => node.id === ancestorId);
+
+/** Every id below a node, the node itself not included. */
+export const getDescendantIds = (
+  children: ChildrenIndex,
+  id: string,
+): string[] => {
+  const ids: string[] = [];
+  const stack = [id];
+
+  while (stack.length > 0) {
+    for (const child of children.get(stack.pop()!) ?? []) {
+      ids.push(child.id);
+      if (isFolder(child)) stack.push(child.id);
+    }
+  }
+
+  return ids;
+};
+
+/**
+ * Walks folders by name. Only needed to line up a local folder with its public
+ * counterpart, which have different ids but the same place in the tree.
+ * Returns the folder's id (`null` for the root, i.e. empty `names`) or
+ * `undefined` when a folder along the way doesn't exist.
+ */
+export const findFolderByNames = (
+  tree: NodeTree,
+  names: string[],
+): string | null | undefined => {
+  let parentId: string | null = null;
+
+  for (const name of names) {
+    const folder: NodeType | undefined = tree.children
+      .get(parentId)
+      ?.find((node) => isFolder(node) && node.name === name);
+    if (!folder) return undefined;
+
+    parentId = folder.id;
+  }
+
+  return parentId;
+};
+
+/** A file's content, or `null` when the id is missing or is a folder. */
+export const getFileContent = (nodes: NodeMap, id: string): string | null => {
+  const node = nodes[id];
+  return node && isFile(node) ? node.content : null;
+};
+
+/**
+ * Naming
+ */
+
+/**
+ * A name that is free among `siblings` of the same type, so a file and a
+ * folder are allowed to share a name.
+ */
+export const getAvailableName = (
+  siblings: NodeType[],
+  baseName: string,
+  type: NodeType["type"],
+): string => {
+  const taken = new Set(
+    siblings.filter((node) => node.type === type).map((node) => node.name),
+  );
+
+  let name = baseName;
+  for (let counter = 1; taken.has(name); counter++) {
+    name = `${baseName} ${counter}`;
+  }
+
+  return name;
+};
+
+/**
+ *  Untrusted data, file formats, public ids
+ */
+
+type IdFactory = (trail: string[], type: NodeType["type"]) => string;
+
+/**
+ * Turns untrusted nested data (an import file, a public collection file) into
+ * nodes. Invalid entries are dropped, unknown fields are removed, names that
+ * clash within a folder get a suffix, and every node gets the id `makeId`
+ * returns for it. `trail` is the list of names from the root down to the node.
+ * Top level nodes get `parentId: null`.
+ */
+export const fromTree = (
+  raw: unknown,
+  makeId: IdFactory,
+  parentId: string | null = null,
+  trail: string[] = [],
+  out: NodeMap = {},
+): NodeMap => {
+  if (!Array.isArray(raw)) return out;
+
+  const taken: NodeType[] = [];
+
+  for (const entry of raw) {
+    if (typeof entry !== "object" || entry === null) continue;
+
+    const { type, name, content, files } = entry as Record<string, unknown>;
+    if (type !== "file" && type !== "folder") continue;
+    if (typeof name !== "string" || name.trim() === "") continue;
+
+    const finalName = getAvailableName(taken, name.trim(), type);
+    const nodeTrail = [...trail, finalName];
+    const id = makeId(nodeTrail, type);
+    const now = Date.now();
+
+    const node: NodeType =
+      type === "file"
+        ? {
+            id,
+            parentId,
+            type,
+            name: finalName,
+            content: typeof content === "string" ? content : "",
+            updatedAt: now,
+            createdAt: now,
+          }
+        : {
+            id,
+            parentId,
+            type,
+            name: finalName,
+            updatedAt: now,
+            createdAt: now,
+          };
+
+    taken.push(node);
+    out[id] = node;
+
+    if (type === "folder") fromTree(files, makeId, id, nodeTrail, out);
+  }
+
+  return out;
+};
+
+/**
+ * Nodes -> nested data, for export. Ids are left out: importing gives new ones anyway.
+ * Pass `nodeId` to export only that node and everything below it.
+ */
+export const toTree = (nodes: NodeMap, nodeId?: string): TreeNode[] => {
+  const children = buildChildrenIndex(nodes);
+
+  const convert = (node: NodeType): TreeNode =>
+    isFolder(node)
+      ? {
+          type: "folder",
+          name: node.name,
+          files: (children.get(node.id) ?? []).map(convert),
+        }
+      : { type: "file", name: node.name, content: node.content };
+
+  if (nodeId === undefined) return (children.get(null) ?? []).map(convert);
+
+  const node = nodes[nodeId];
+  return node ? [convert(node)] : [];
+};
+
+/**
+ * Ids for nodes that come from a public collection file. They are built from
+ * the file and the names, so they stay the same every time the file is
+ * reloaded, and they can never equal a local id. The type is part of the id
+ * because a file and a folder may share a name.
+ */
+export const makePublicIdFactory =
+  (filePath: string): IdFactory =>
+  (trail, type) =>
+    `public:${filePath}/${trail.join("/")}#${type}`;
+
+/** True for ids made by `makePublicIdFactory`. `null` (the root) is not public. */
+export const isPublicId = (id: string | null): boolean =>
+  id !== null && id.startsWith("public:");
+
+/**
+ * Search
+ */
+
+export type IndexedFile = {
+  id: string;
+  name: string;
+  /** Names from the root down to the file, joined with "/". */
+  path: string;
+};
+
+/** Every file, flattened for searching. Content is not included. */
+export const indexFiles = (nodes: NodeMap): IndexedFile[] =>
+  Object.values(nodes)
+    .filter(isFile)
+    .map((file) => ({
+      id: file.id,
+      name: file.name,
+      path: getAncestry(nodes, file.id)
+        .map((node) => node.name)
+        .join("/"),
+    }));

@@ -7,7 +7,7 @@ import { Button } from "@/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 
 export default function TemporaryFileButton() {
-  const setActiveFilePath = useFilesStore((state) => state.setActiveFile);
+  const setActiveFile = useFilesStore((state) => state.setActiveFile);
   const setTemplate = useEditorStore((state) => state.setTemplate);
 
   return (
@@ -19,7 +19,7 @@ export default function TemporaryFileButton() {
             size="icon-sm"
             onClick={() => {
               setTemplate("");
-              setActiveFilePath([]);
+              setActiveFile(null);
             }}
           >
             <HugeiconsIcon icon={File02Icon} className="size-4" />

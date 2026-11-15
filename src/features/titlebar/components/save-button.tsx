@@ -13,22 +13,30 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 export default function SaveButton() {
   const saveActiveFile = useFilesStore((state) => state.saveActiveFile);
 
+  const handleSave = () => {
+    const result = saveActiveFile();
+
+    if (result === "saved") {
+      toast.success("File saved successfully!");
+    } else if (result === "read-only") {
+      toast.error("Public files are read-only. Download first!");
+    } else {
+      toast.error("No file is open to be saved!");
+    }
+  };
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "s" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        const isSaved = saveActiveFile();
-        if (isSaved) {
-          toast.success("File saved successfully!");
-        } else {
-          toast.error("No active file to save!");
-        }
+        handleSave();
       }
     };
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+
   return (
     <Tooltip>
       <TooltipTrigger
@@ -37,14 +45,7 @@ export default function SaveButton() {
             variant="ghost"
             size="icon-sm"
             className="relative"
-            onClick={() => {
-              const isSaved = saveActiveFile();
-              if (isSaved) {
-                toast.success("File saved successfully!");
-              } else {
-                toast.error("No active file to save!");
-              }
-            }}
+            onClick={handleSave}
           >
             <HugeiconsIcon icon={FloppyDiskIcon} className="size-4" />
             <SaveIndicator />

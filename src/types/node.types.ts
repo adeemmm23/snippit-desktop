@@ -1,32 +1,55 @@
-export type Collection = {
+type BaseNode = {
   id: string;
+  /** The folder this node lives in. `null` means the collection root. */
+  parentId: string | null;
   name: string;
-  files: NodeType[];
-  updatedAt?: string;
-  createdAt?: string;
+  updatedAt: number;
+  createdAt: number;
 };
 
-export type FileType = {
-  id: string;
+export type FileType = BaseNode & {
   type: "file";
-  name: string;
-  isPublic?: boolean;
   content: string;
-  updatedAt?: string;
-  createdAt?: string;
 };
 
-export type FolderType = {
-  id: string;
+export type FolderType = BaseNode & {
   type: "folder";
-  name: string;
-  isPublic?: boolean;
-  files: NodeType[];
-  updatedAt?: string;
-  createdAt?: string;
 };
 
 export type NodeType = FileType | FolderType;
+
+/** Every node of a collection, by id. This is what gets stored. */
+export type NodeMap = Record<string, NodeType>;
+
+export type Collection = {
+  id: string;
+  name: string;
+  nodes: NodeMap;
+  updatedAt: number;
+  createdAt: number;
+};
+
+/**
+ * The nested shape used by export files, import files and public collection
+ * files.
+ */
+export type TreeNode = {
+  type: "file" | "folder";
+  name: string;
+  content?: string;
+  files?: TreeNode[];
+};
+
+/**
+ * Where an item shown in the tree comes from. This is a property of the view,
+ * not of the data, so it never gets stored on the nodes themselves.
+ */
+export type Origin = "local" | "public";
+
+export type TreeItem = {
+  node: NodeType;
+  origin: Origin;
+};
 
 export function isFile(item: NodeType): item is FileType {
   return item.type === "file";

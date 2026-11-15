@@ -1,451 +1,398 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import {
-  deepClone,
-  getAvailableName,
-  getChildren,
-  isDeepEqual,
-  remapPath,
-  startsWithPath,
-} from "./utils";
 import { useEditorStore } from "../editor/editor-store";
 import { createFsStorage } from "../storage";
 
 import {
   isFile,
-  isFolder,
   type Collection,
+  type NodeMap,
   type NodeType,
 } from "@/types/node.types";
+import { fromTree, generateId, isPublicId } from "@/utils/files.utils";
 import {
-  assignMissingIds,
-  generateId,
-  getNodeContent,
-  getOrCreateNodeContent,
-} from "@/utils/files.utils";
+  attachNodes,
+  createNode,
+  ensureFolderPath as ensureFolderPathIn,
+  moveNode,
+  removeNode,
+  renameNode,
+} from "@/utils/node-ops.utils";
+
+const MAX_OPENED_FILES = 100;
+
+type SavedFiles = Pick<
+  FilesStore,
+  "collections" | "activeCollection" | "openedFiles"
+>;
+
+export type SaveResult = "saved" | "no-file" | "read-only";
+
+export type OpenedFile = { id: string; count: number; openedAt: number };
+
+/** Use as the fallback in selectors, so "no history" is always the same array. */
+export const NO_OPENED_FILES: OpenedFile[] = [];
 
 type FilesStore = {
   collections: Collection[];
   activeCollection: string;
-  activeFile: string[];
-  currenFolder: string[];
-  openedFiles: { path: string[]; count: number; openedAt: number }[];
-  setFiles: (files: NodeType[]) => void;
+  /** Id of the file open in the editor, `null` for none. */
+  activeFileId: string | null;
+  /** Id of the folder being browsed, `null` for the collection root. */
+  currentFolderId: string | null;
+  /** Open history per collection id, so switching collections doesn't lose it. */
+  openedFiles: Record<string, OpenedFile[]>;
+
   setActiveCollection: (id: string) => void;
-  createCollection: (name: string, files?: NodeType[]) => void;
+  /** Returns the new collection's id, or `null` if the name is already used. */
+  createCollection: (name: string, nodes?: NodeMap) => string | null;
   deleteCollection: (id: string) => void;
   renameCollection: (id: string, name: string) => void;
-  setActiveFile: (path: string[]) => void;
-  setCurrentFolder: (path: string[]) => void;
-  addFiles: (
-    files: NodeType[],
-    path: string[],
-    selectedCollection?: string,
-  ) => void;
-  saveActiveFile: () => boolean;
+
+  setActiveFile: (id: string | null) => void;
+  setCurrentFolder: (id: string | null) => void;
+
+  /**
+   * Copies a stand-alone map of nodes (from `fromTree` or `extractSubtree`)
+   * into a folder, with new ids. `null` parent = root.
+   */
+  addNodes: (
+    incoming: NodeMap,
+    parentId: string | null,
+    collectionId?: string,
+  ) => boolean;
+  /**
+   * Writes the editor's text into the open file.
+   * `"read-only"` means the open file is a public one, which can't be saved.
+   */
+  saveActiveFile: () => SaveResult;
+  /** Returns the new item's id, or `null` if the parent doesn't exist or isn't a folder. */
   createItem: (
-    path: string[],
-    type: "file" | "folder",
-    selectedCollection?: string,
+    parentId: string | null,
+    type: NodeType["type"],
+    name: string,
+    collectionId?: string,
     content?: string,
-    nodes?: NodeType[],
-  ) => void;
-  removeItem: (path: string[]) => void;
-  moveItem: (oldPath: string[], newPath: string[]) => void;
-  renameItem: (path: string[], name: string) => void;
-  ensureIds: () => number;
+  ) => string | null;
+  removeItem: (id: string) => void;
+  /** Moves an item into another folder (`null` = root). */
+  moveItem: (id: string, targetParentId: string | null) => void;
+  renameItem: (id: string, name: string) => void;
+  /** Makes sure a folder path exists in the collection and returns the last folder's id. */
+  ensureFolderPath: (names: string[], collectionId?: string) => string | null;
 };
 
 const initialCollection: Collection = {
   id: "0",
   name: "Default",
-  files: [],
+  nodes: {},
+  updatedAt: Date.now(),
+  createdAt: Date.now(),
+};
+
+/** What is reset when you switch collection. The open history is not part of it. */
+const emptyNavigation = {
+  activeFileId: null,
+  currentFolderId: null,
 };
 
 export const useFilesStore = create<FilesStore>()(
   persist(
-    (set, get) => ({
-      collections: [initialCollection],
-      activeCollection: "0",
-      activeFile: [],
-      currenFolder: [],
-      openedFiles: [],
-      setFiles: (files) => {
-        const { activeCollection, collections } = get();
-
-        const updatedCollections = collections.map((collection) => {
-          if (collection.id === activeCollection) {
-            return { ...collection, files };
-          }
-          return collection;
-        });
-
-        set({ collections: updatedCollections });
-      },
-      setActiveCollection: (id) => {
-        const { collections } = get();
-        const { setTemplate } = useEditorStore.getState();
-
-        if (!collections.some((collection) => collection.id === id)) {
-          return;
-        }
-
-        setTemplate("");
-
-        set({
-          activeCollection: id,
-          activeFile: [],
-          currenFolder: [],
-          openedFiles: [],
-        });
-      },
-      createCollection: (name, files) => {
-        const { collections } = get();
-
-        if (collections.some((collection) => collection.name === name)) {
-          return;
-        }
-
-        const id = generateId();
-        const now = new Date().toISOString();
-
-        const newCollection = {
-          id,
-          name,
-          files: files || [],
-          updatedAt: now,
-          createdAt: now,
-        };
-
-        set({
-          collections: [...collections, newCollection],
-          activeCollection: id,
-        });
-      },
-      deleteCollection: (id) => {
+    (set, get) => {
+      /**
+       * Applies `change` to a collection's nodes and stores the result, unless
+       * `change` returns `null` (the request didn't make sense).
+       */
+      const updateNodes = (
+        collectionId: string | undefined,
+        change: (nodes: NodeMap) => NodeMap | null,
+      ): boolean => {
         const { collections, activeCollection } = get();
-        const { setTemplate } = useEditorStore.getState();
+        const targetId = collectionId ?? activeCollection;
 
-        if (activeCollection === id) {
-          setTemplate("");
-        }
+        const collection = collections.find((c) => c.id === targetId);
+        if (!collection) return false;
 
-        const filteredCollections = collections.filter(
-          (collection) => collection.id !== id,
-        );
+        const nodes = change(collection.nodes);
+        if (!nodes) return false;
 
-        const updatedCollections =
-          filteredCollections.length > 0
-            ? filteredCollections
-            : [initialCollection];
-
+        const now = Date.now();
         set({
-          collections: updatedCollections,
-          activeCollection:
-            activeCollection === id
-              ? updatedCollections[0].id
-              : activeCollection,
-          ...(activeCollection === id && {
-            activeFile: [],
-            currenFolder: [],
-            openedFiles: [],
-          }),
-        });
-      },
-      renameCollection: (id, newName) => {
-        const { collections } = get();
-
-        const now = new Date().toISOString();
-
-        const updatedCollections = collections.map((collection) =>
-          collection.id === id
-            ? { ...collection, name: newName, updatedAt: now }
-            : collection,
-        );
-
-        set({
-          collections: updatedCollections,
-        });
-      },
-      setActiveFile: (activeFilePath) => {
-        const { openedFiles } = get();
-
-        const newOpenedFiles = deepClone(openedFiles);
-
-        const existingFile = newOpenedFiles.find((file) =>
-          isDeepEqual(file.path, activeFilePath),
-        );
-
-        if (existingFile) {
-          existingFile.count += 1;
-          existingFile.openedAt = Date.now();
-        } else {
-          newOpenedFiles.push({
-            path: activeFilePath,
-            count: 1,
-            openedAt: Date.now(),
-          });
-        }
-
-        set({
-          activeFile: activeFilePath,
-          openedFiles: newOpenedFiles,
-        });
-      },
-      setCurrentFolder: (currentWorkingFolder) => {
-        set({ currenFolder: currentWorkingFolder });
-      },
-      addFiles: (newFiles, path, selecteCollection) => {
-        const { collections, activeCollection } = get();
-
-        const files =
-          collections.find(
-            (collection) =>
-              collection.id === (selecteCollection ?? activeCollection),
-          )?.files || [];
-
-        const updatedFiles = deepClone(files);
-
-        const node = getNodeContent(path, updatedFiles);
-
-        if (node && isFolder(node)) {
-          node.files.push(...newFiles);
-        } else {
-          updatedFiles.push(...newFiles);
-        }
-
-        const updatedCollections = collections.map((collection) => {
-          if (collection.id === (selecteCollection ?? activeCollection)) {
-            return { ...collection, files: updatedFiles };
-          }
-          return collection;
-        });
-
-        set({ collections: updatedCollections });
-      },
-      saveActiveFile: () => {
-        const { activeFile, collections, activeCollection } = get();
-        const { template } = useEditorStore.getState();
-
-        const files =
-          collections.find((collection) => collection.id === activeCollection)
-            ?.files || [];
-
-        if (activeFile.length === 0) return false;
-
-        const newFiles = deepClone(files);
-
-        const node = getNodeContent(activeFile, newFiles);
-
-        if (!node || !isFile(node)) {
-          return false;
-        }
-
-        node.content = template;
-
-        const updatedCollections = collections.map((collection) => {
-          if (collection.id === activeCollection) {
-            return { ...collection, files: newFiles };
-          }
-          return collection;
-        });
-
-        set({ collections: updatedCollections });
-        return true;
-      },
-      createItem: (path, type, selecteCollection, content, nodes) => {
-        const { collections, activeCollection } = get();
-        const files =
-          collections.find(
-            (c) => c.id === (selecteCollection ?? activeCollection),
-          )?.files || [];
-
-        console.log("createItem", path, type, content, selecteCollection);
-        const newFiles = deepClone(files);
-        const name = path[path.length - 1];
-
-        const node = getOrCreateNodeContent(path.slice(0, -1), newFiles);
-        const parent = node && isFolder(node) ? node.files : newFiles;
-
-        const finalName = getAvailableName(parent, name);
-
-        const id = generateId();
-
-        let newNode: NodeType;
-
-        if (type === "file") {
-          newNode = {
-            id,
-            type: "file",
-            name: finalName,
-            content: content || "",
-          };
-        } else {
-          newNode = {
-            id,
-            type: "folder",
-            name: finalName,
-            files: nodes ?? [],
-          };
-        }
-
-        parent.push(newNode);
-
-        const updatedCollections = collections.map((collection) => {
-          if (collection.id === (selecteCollection ?? activeCollection)) {
-            return { ...collection, files: newFiles };
-          }
-          return collection;
-        });
-
-        set({ collections: updatedCollections });
-      },
-      removeItem: (path) => {
-        const { activeCollection, collections, openedFiles } = get();
-        const files =
-          collections.find((c) => c.id === activeCollection)?.files || [];
-        const newFiles = deepClone(files);
-        const node = getNodeContent(path.slice(0, -1), newFiles);
-        const parent = node && isFolder(node) ? node.files : newFiles;
-
-        if (!parent) {
-          return;
-        }
-
-        const itemName = path[path.length - 1];
-        const itemIndex = parent.findIndex(
-          (item: NodeType) => item.name === itemName,
-        );
-
-        if (itemIndex === -1) {
-          return;
-        }
-
-        parent.splice(itemIndex, 1);
-
-        const newOpenedFiles = openedFiles.filter((file) => {
-          if (isDeepEqual(file.path, path)) {
-            return false;
-          }
-
-          if (file.path.length < path.length) {
-            return true;
-          }
-
-          for (let i = 0; i < path.length; i++) {
-            if (file.path[i] !== path[i]) {
-              return true;
-            }
-          }
-
-          return false;
-        });
-
-        const updatedCollections = collections.map((collection) => {
-          if (collection.id === activeCollection) {
-            return { ...collection, files: newFiles };
-          }
-          return collection;
-        });
-        set({ collections: updatedCollections, openedFiles: newOpenedFiles });
-      },
-      moveItem: (oldPath, newPath) => {
-        const {
-          activeCollection,
-          collections,
-          activeFile,
-          currenFolder,
-          openedFiles,
-        } = get();
-
-        if (oldPath.length === 0 || newPath.length === 0) return;
-
-        const newParentPath = newPath.slice(0, -1);
-        if (startsWithPath(newParentPath, oldPath)) return;
-
-        const files =
-          collections.find((collection) => collection.id === activeCollection)
-            ?.files ?? [];
-        const newFiles = deepClone(files);
-
-        const oldParent = getChildren(newFiles, oldPath.slice(0, -1));
-        const newParent = getChildren(newFiles, newParentPath);
-        if (!oldParent || !newParent) return;
-
-        const item = oldParent.find(
-          (node) => node.name === oldPath[oldPath.length - 1],
-        );
-        if (!item) return;
-
-        const finalName = getAvailableName(
-          newParent.filter((node) => node !== item),
-          newPath[newPath.length - 1],
-        );
-
-        if (oldParent === newParent && finalName === item.name) return;
-
-        item.name = finalName;
-        if (oldParent !== newParent) {
-          oldParent.splice(oldParent.indexOf(item), 1);
-          newParent.push(item);
-        }
-
-        const resolvedPath = [...newParentPath, finalName];
-        const remap = (path: string[]) =>
-          remapPath(path, oldPath, resolvedPath);
-
-        set({
-          collections: collections.map((collection) =>
-            collection.id === activeCollection
-              ? { ...collection, files: newFiles }
-              : collection,
+          collections: collections.map((c) =>
+            c.id === targetId ? { ...c, nodes, updatedAt: now } : c,
           ),
-          activeFile: remap(activeFile),
-          currenFolder: remap(currenFolder),
-          openedFiles: openedFiles.map((file) => ({
-            ...file,
-            path: remap(file.path),
-          })),
         });
-      },
-      renameItem: (path, newName) => {
-        const name = newName.trim();
-        if (!name) return;
+        return true;
+      };
 
-        get().moveItem(path, [...path.slice(0, -1), name]);
-      },
-      ensureIds: () => {
-        const { collections, activeCollection } = get();
-        let total = 0;
+      return {
+        collections: [initialCollection],
+        activeCollection: "0",
+        ...emptyNavigation,
+        openedFiles: {},
 
-        const updated = collections.map((collection) => {
-          const { nodes, count } = assignMissingIds(collection.files);
-          total += count;
+        setActiveCollection: (id) => {
+          const { collections } = get();
 
-          let id = collection.id;
-          if (!id) {
-            id = generateId();
-            total++;
+          if (!collections.some((collection) => collection.id === id)) return;
+
+          useEditorStore.getState().setTemplate("");
+          set({ activeCollection: id, ...emptyNavigation });
+        },
+
+        createCollection: (name, nodes) => {
+          const { collections } = get();
+
+          if (collections.some((collection) => collection.name === name)) {
+            return null;
           }
-          return { ...collection, id, files: nodes };
-        });
 
-        if (total === 0) return 0;
+          const id = generateId();
+          const now = Date.now();
 
-        set({
-          collections: updated,
-          // if the active collection was the one without an id, fall back to the first
-          activeCollection: updated.some((c) => c.id === activeCollection)
-            ? activeCollection
-            : updated[0].id,
-        });
-        return total;
-      },
-    }),
+          set({
+            collections: [
+              ...collections,
+              {
+                id,
+                name,
+                nodes: nodes ?? {},
+                updatedAt: now,
+                createdAt: now,
+              },
+            ],
+            activeCollection: id,
+            ...emptyNavigation,
+          });
+          useEditorStore.getState().setTemplate("");
+
+          return id;
+        },
+
+        deleteCollection: (id) => {
+          const { collections, activeCollection, openedFiles } = get();
+          const { setTemplate } = useEditorStore.getState();
+
+          const remaining = collections.filter((c) => c.id !== id);
+          const updated =
+            remaining.length > 0 ? remaining : [initialCollection];
+
+          // Drop this collection's open history
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [id]: _removed, ...updatedOpenedFiles } = openedFiles;
+
+          if (activeCollection === id) {
+            setTemplate("");
+            set({
+              collections: updated,
+              openedFiles: updatedOpenedFiles,
+              activeCollection: updated[0].id,
+              ...emptyNavigation,
+            });
+          } else {
+            set({ collections: updated, openedFiles: updatedOpenedFiles });
+          }
+        },
+
+        renameCollection: (id, name) => {
+          const now = Date.now();
+
+          set({
+            collections: get().collections.map((collection) =>
+              collection.id === id
+                ? { ...collection, name, updatedAt: now }
+                : collection,
+            ),
+          });
+        },
+
+        setActiveFile: (id) => {
+          if (id === null) {
+            set({ activeFileId: null });
+            return;
+          }
+
+          const now = Date.now();
+          const { openedFiles, activeCollection } = get();
+          const history = openedFiles[activeCollection] ?? NO_OPENED_FILES;
+          const existing = history.find((file) => file.id === id);
+
+          const next = existing
+            ? history.map((file) =>
+                file.id === id
+                  ? { ...file, count: file.count + 1, openedAt: now }
+                  : file,
+              )
+            : [...history, { id, count: 1, openedAt: now }];
+
+          set({
+            activeFileId: id,
+            openedFiles: {
+              ...openedFiles,
+              // Keep the history from growing forever: drop the least recently opened.
+              [activeCollection]:
+                next.length > MAX_OPENED_FILES
+                  ? [...next]
+                      .sort((a, b) => b.openedAt - a.openedAt)
+                      .slice(0, MAX_OPENED_FILES)
+                  : next,
+            },
+          });
+        },
+
+        setCurrentFolder: (id) => set({ currentFolderId: id }),
+
+        addNodes: (incoming, parentId, collectionId) =>
+          updateNodes(collectionId, (nodes) =>
+            attachNodes(nodes, parentId, incoming),
+          ),
+
+        saveActiveFile: () => {
+          const { activeFileId } = get();
+          if (activeFileId === null) return "no-file";
+
+          const { template } = useEditorStore.getState();
+
+          const now = Date.now();
+
+          const saved = updateNodes(undefined, (nodes) => {
+            const file = nodes[activeFileId];
+            if (!file || !isFile(file)) return null;
+
+            return {
+              ...nodes,
+              [file.id]: {
+                ...file,
+                content: template,
+                updatedAt: now,
+              },
+            };
+          });
+
+          if (saved) return "saved";
+
+          // The id is not in the local collection: either a public file, or a stale id.
+          return isPublicId(activeFileId) ? "read-only" : "no-file";
+        },
+
+        createItem: (parentId, type, name, collectionId, content) => {
+          let id = null as string | null;
+
+          updateNodes(collectionId, (nodes) => {
+            const created = createNode(nodes, parentId, type, name, content);
+            id = created?.id ?? null;
+            return created?.nodes ?? null;
+          });
+
+          return id;
+        },
+
+        removeItem: (id) => {
+          const before = get();
+          const parentId =
+            before.collections.find((c) => c.id === before.activeCollection)
+              ?.nodes[id]?.parentId ?? null;
+
+          let removedIds = null as Set<string> | null;
+
+          updateNodes(undefined, (nodes) => {
+            const result = removeNode(nodes, id);
+            removedIds = result?.removed ?? null;
+            return result?.nodes ?? null;
+          });
+
+          if (!removedIds) return;
+          const removed: Set<string> = removedIds;
+
+          const {
+            activeFileId,
+            currentFolderId,
+            openedFiles,
+            activeCollection,
+          } = get();
+          const activeRemoved =
+            activeFileId !== null && removed.has(activeFileId);
+
+          set({
+            activeFileId: activeRemoved ? null : activeFileId,
+            // If we were browsing inside what got deleted, step out to its parent.
+            currentFolderId:
+              currentFolderId !== null && removed.has(currentFolderId)
+                ? parentId
+                : currentFolderId,
+            openedFiles: {
+              ...openedFiles,
+              [activeCollection]: (
+                openedFiles[activeCollection] ?? NO_OPENED_FILES
+              ).filter((file) => !removed.has(file.id)),
+            },
+          });
+
+          if (activeRemoved) useEditorStore.getState().setTemplate("");
+        },
+
+        moveItem: (id, targetParentId) => {
+          updateNodes(undefined, (nodes) =>
+            moveNode(nodes, id, targetParentId),
+          );
+        },
+
+        renameItem: (id, name) => {
+          updateNodes(undefined, (nodes) => renameNode(nodes, id, name));
+        },
+
+        ensureFolderPath: (names, collectionId) => {
+          let id = null as string | null;
+
+          updateNodes(collectionId, (nodes) => {
+            const result = ensureFolderPathIn(nodes, names);
+            id = result.id;
+            return result.changed ? result.nodes : null;
+          });
+
+          return id;
+        },
+      };
+    },
     {
       name: "files",
-      storage: createFsStorage<FilesStore>(),
+      version: 3,
+      storage: createFsStorage<SavedFiles>(),
+      partialize: ({ collections, activeCollection, openedFiles }) => ({
+        collections,
+        activeCollection,
+        openedFiles,
+      }),
+      migrate: (persisted) => {
+        const state = (persisted ?? {}) as Partial<FilesStore>;
+        const now = Date.now();
+
+        const collections: Collection[] = (
+          (state.collections ?? []) as (Partial<Collection> & {
+            files?: unknown;
+          })[]
+        )
+          .filter((c) => typeof c?.name === "string")
+          .map((c) => ({
+            id: c.id || generateId(),
+            name: c.name!,
+            nodes: fromTree(c.files, generateId),
+            createdAt: now,
+            updatedAt: now,
+          }));
+        const safe = collections.length > 0 ? collections : [initialCollection];
+
+        return {
+          ...state,
+          collections: safe,
+          activeCollection: safe.some((c) => c.id === state.activeCollection)
+            ? state.activeCollection
+            : safe[0].id,
+          ...emptyNavigation,
+          openedFiles: {},
+        } as FilesStore;
+      },
     },
   ),
 );

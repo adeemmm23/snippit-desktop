@@ -1,3 +1,5 @@
+import { Loading03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
 import SettingGroup from "../ui/setting-group";
@@ -24,6 +26,7 @@ export default function ResetSettingGroup() {
         description="This will remove all stored app data from your browser."
         trigger={
           <Button variant="destructive" className="w-fit">
+            <HugeiconsIcon icon={Loading03Icon} />
             Reset Snippit
           </Button>
         }

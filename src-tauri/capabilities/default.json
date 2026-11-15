@@ -20,10 +20,9 @@
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "fs:allow-read-dir",
-    {
-      "identifier": "fs:scope",
-      "allow": [{ "path": "**" }]
-    },
+    { "identifier": "fs:allow-read-text-file", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-read-dir", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-exists", "allow": [{ "path": "**" }] },
     {
       "identifier": "fs:allow-mkdir",
       "allow": [

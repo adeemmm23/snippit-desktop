@@ -89,7 +89,7 @@ function HelperSettingInput({
         items={items}
         value={type}
         onValueChange={(value) => onChange?.({ type: value as HelperType })}
-        disabled={name == ""}
+        disabled={name === ""}
       >
         <SelectTrigger className="w-full max-w-48">
           <SelectValue placeholder="Select helper" />
@@ -112,7 +112,7 @@ function HelperSettingInput({
               variant="outline"
               size="icon"
               disabled={
-                !type || name == "" || type == "date" || type == "range"
+                !type || name === "" || type === "date" || type === "range"
               }
             >
               <HugeiconsIcon icon={Settings01Icon} />

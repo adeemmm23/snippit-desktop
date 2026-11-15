@@ -14,13 +14,14 @@ import {
 
 type ImportDialogFooterProps = {
   onSelect: () => void;
-  path: string[];
+  /** The folder being browsed; new folders are created inside it. */
+  folderId: string | null;
   selectedCollection: string;
 };
 
 export default function ImportDialogFooter({
   onSelect,
-  path,
+  folderId,
   selectedCollection,
 }: ImportDialogFooterProps) {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
@@ -31,11 +32,7 @@ export default function ImportDialogFooter({
     if (!inputRef.current?.value) return;
     if (inputRef.current?.value.trim() === "") return;
 
-    createItem(
-      [...path, inputRef.current?.value ?? "New folder"],
-      "folder",
-      selectedCollection,
-    );
+    createItem(folderId, "folder", inputRef.current.value, selectedCollection);
     setIsCreatingFolder(false);
   };
 

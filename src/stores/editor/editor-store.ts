@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 import { extractParts } from "./utils";
 import useSettingsStore from "../settings/settings-store";
@@ -16,60 +15,54 @@ type EditorStore = {
   resetVariables: () => void;
 };
 
-export const useEditorStore = create<EditorStore>()(
-  persist(
-    (set, get) => ({
-      template: "",
-      variables: {},
-      parts: [],
-      setTemplate: (template) => {
-        const { label: regexLabel, value: regexValue } = VARIABLE_FORMATS.find(
-          (format) =>
-            format.label === useSettingsStore.getState().variableFormat,
-        )!;
+export const useEditorStore = create<EditorStore>()((set, get) => ({
+  template: "",
+  variables: {},
+  parts: [],
+  setTemplate: (template) => {
+    const { label: regexLabel, value: regexValue } = VARIABLE_FORMATS.find(
+      (format) => format.label === useSettingsStore.getState().variableFormat,
+    )!;
 
-        const { newVariables, newParts } = extractParts({
-          template,
-          variables: get().variables,
-          regexLabel,
-          regexValue,
-        });
+    const { newVariables, newParts } = extractParts({
+      template,
+      variables: get().variables,
+      regexLabel,
+      regexValue,
+    });
 
-        set({
-          template,
-          variables: newVariables,
-          parts: newParts,
-        });
+    set({
+      template,
+      variables: newVariables,
+      parts: newParts,
+    });
+  },
+  setVariable: (name, value) => {
+    set((state) => ({
+      variables: {
+        ...state.variables,
+        [name]: value,
       },
-      setVariable: (name, value) => {
-        set((state) => ({
-          variables: {
-            ...state.variables,
-            [name]: value,
-          },
-        }));
+    }));
 
-        // Refresh the template to update the variable values in the parts
-        get().setTemplate(get().template);
-      },
-      resetVariables: () => {
-        set((state) => {
-          const newVariables: Record<string, string> = {};
+    // Refresh the template to update the variable values in the parts
+    get().setTemplate(get().template);
+  },
+  resetVariables: () => {
+    set((state) => {
+      const newVariables: Record<string, string> = {};
 
-          Object.keys(state.variables).forEach((key) => {
-            newVariables[key] = "";
-          });
+      Object.keys(state.variables).forEach((key) => {
+        newVariables[key] = "";
+      });
 
-          return { variables: newVariables };
-        });
+      return { variables: newVariables };
+    });
 
-        // Same as above
-        get().setTemplate(get().template);
-      },
-    }),
-    { name: "editor" },
-  ),
-);
+    // Same as above
+    get().setTemplate(get().template);
+  },
+}));
 
 // Refreshes the template whenever the variable format changes
 useSettingsStore.subscribe(
