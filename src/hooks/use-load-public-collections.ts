@@ -13,7 +13,7 @@ export function useLoadPublicCollections() {
   );
 
   useEffect(() => {
-    toast.loading("Loading public collections", {
+    toast.loading("Loading collections", {
       id: "public-collections-loading",
     });
 
