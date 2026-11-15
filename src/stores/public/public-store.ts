@@ -13,17 +13,14 @@ export type PublicCollection = {
 
 type PublicCollectionsState = {
   collections: PublicCollection[];
-  isLoading: boolean;
   loadPublicCollections: () => Promise<void>;
 };
 
 export const usePublicCollectionsStore = create<PublicCollectionsState>(
   (set) => ({
     collections: [],
-    isLoading: false,
 
     loadPublicCollections: async () => {
-      set({ isLoading: true });
       const enabledPublicPaths = useSettingsStore.getState().publicCollections;
 
       const loadedCollections: PublicCollection[] = [];
@@ -50,7 +47,7 @@ export const usePublicCollectionsStore = create<PublicCollectionsState>(
         }
       }
 
-      set({ collections: loadedCollections, isLoading: false });
+      set({ collections: loadedCollections });
     },
   }),
 );

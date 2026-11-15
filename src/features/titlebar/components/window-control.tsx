@@ -14,11 +14,8 @@ export default function WindowControls() {
   useEffect(() => {
     appWindow.isMaximized().then(setIsMaximized);
 
-    const unlisten = appWindow.onResized(async ({ payload: size }) => {
-      const maximized = await appWindow.isMaximized();
-      console.log(size);
-      console.log(maximized);
-      setIsMaximized(maximized);
+    const unlisten = appWindow.onResized(async () => {
+      setIsMaximized(await appWindow.isMaximized());
     });
 
     return () => {

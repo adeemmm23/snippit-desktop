@@ -43,7 +43,7 @@ export const createNode = (
   if (!trimmed || !isValidParent(nodes, parentId)) return null;
 
   const id = generateId();
-  const now = new Date().toISOString();
+  const now = Date.now();
   const finalName = getAvailableName(siblingsOf(nodes, parentId), trimmed, type);
 
   const node: NodeType =
@@ -93,7 +93,7 @@ export const renameNode = (
 
   return {
     ...nodes,
-    [id]: { ...node, name, updatedAt: new Date().toISOString() },
+    [id]: { ...node, name, updatedAt: Date.now() },
   };
 };
 
@@ -151,10 +151,9 @@ export const attachNodes = (
     const isRoot = node.parentId === null || !newIds.has(node.parentId);
     const id = newIds.get(node.id)!;
 
-    let name = node.name;
-    if (isRoot) {
-      name = getAvailableName(rootSiblings, node.name, node.type);
-    }
+    const name = isRoot
+      ? getAvailableName(rootSiblings, node.name, node.type)
+      : node.name;
 
     const copy: NodeType = {
       ...node,

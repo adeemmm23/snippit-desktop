@@ -32,8 +32,8 @@ export default function SearchBar() {
   const { local, publicNodes } = useCollectionNodes();
   const openFile = useOpenFile();
 
-  const [open, setOpen] = useState<boolean>(false);
-  const [query, setQuery] = useState<string>("");
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   // Local files plus public ones, except public files a local file with the
   // same path replaces (the folder view hides those too).
@@ -57,21 +57,23 @@ export default function SearchBar() {
     [indexedFiles],
   );
 
+  const renderFile = (file: SearchFile) => (
+    <FileItem
+      key={file.id}
+      file={file}
+      onSelect={() => {
+        openFile(file.id);
+        setOpen(false);
+      }}
+    />
+  );
+
   const toItems = (list: typeof openedFiles) =>
     list
       .map((entry) => byId.get(entry.id))
       .filter((file): file is SearchFile => file !== undefined)
       .slice(0, 3)
-      .map((file) => (
-        <FileItem
-          key={file.id}
-          file={file}
-          onSelect={() => {
-            openFile(file.id);
-            setOpen(false);
-          }}
-        />
-      ));
+      .map(renderFile);
 
   // Sort copies: the array in the store must never be mutated.
   const generateMostOpened = () =>
@@ -84,17 +86,7 @@ export default function SearchBar() {
   const generateLatest = () =>
     toItems([...openedFiles].sort((a, b) => b.openedAt - a.openedAt));
 
-  const generatePreview = () =>
-    indexedFiles.map((file) => (
-      <FileItem
-        key={file.id}
-        file={file}
-        onSelect={() => {
-          openFile(file.id);
-          setOpen(false);
-        }}
-      />
-    ));
+  const generatePreview = () => indexedFiles.map(renderFile);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -140,7 +132,7 @@ export default function SearchBar() {
             <CommandEmpty>
               {query.length > 0 ? "No results found." : "Search for a file"}
             </CommandEmpty>
-            {query.length == 0 && openedFiles.length > 0 && (
+            {query.length === 0 && openedFiles.length > 0 && (
               <>
                 <CommandGroup heading="Most opened">
                   {generateMostOpened()}
@@ -167,7 +159,6 @@ function FileItem({ file, onSelect }: FileItemProps) {
   return (
     // `value` carries the path so the command filter matches on it; ids are never shown.
     <CommandItem
-      // className="gap-5"
       value={`${file.name} ${file.path} ${file.id}`}
       onSelect={onSelect}
     >

@@ -42,7 +42,7 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
   const renameItem = useFilesStore((state) => state.renameItem);
 
   const [isRenaming, setIsRenaming] = useState(false);
-  const [isOpened, setIsOpened] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Public items are read-only: they can't be dragged, and nothing can be dropped on them.
   const { isDragging, ref: nodeRef } = useDraggable({
@@ -71,7 +71,7 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
     setIsRenaming(false);
   };
 
-  const isDraggingOver = node.type == "folder" && isDropTarget && !isDragging;
+  const isDraggingOver = isFolder(node) && isDropTarget && !isDragging;
 
   // TODO: check styling
   return (
@@ -89,7 +89,7 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
           <div
             ref={(n) => {
               nodeRef(n);
-              if (node.type == "folder") dropRef(n);
+              if (isFolder(node)) dropRef(n);
             }}
             role="button"
             tabIndex={0}
@@ -103,7 +103,7 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
           >
             <HugeiconsIcon
               icon={
-                node.type == "file"
+                node.type === "file"
                   ? isPublic
                     ? FileCloudIcon
                     : File01Icon
@@ -160,7 +160,7 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
                         variant="destructive"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setIsOpened(true);
+                          setIsDeleteDialogOpen(true);
                         }}
                       >
                         <HugeiconsIcon icon={Delete02Icon} className="size-4" />
@@ -175,15 +175,15 @@ export default function Node({ item, onOpen, onDownload, isActive }: NodeProps) 
         }
       ></Button>
       <ConfirmDialog
-        open={isOpened}
-        onOpenChange={setIsOpened}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
         title={`Remove ${node.type}`}
         description={`Are you sure you want to remove ${node.name}?`}
         confirmLabel="Delete"
         destructive
         onConfirm={() => {
           removeItem(node.id);
-          setIsOpened(false);
+          setIsDeleteDialogOpen(false);
         }}
       />
     </>

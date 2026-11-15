@@ -119,7 +119,7 @@ export default function PublicCollectionsSettingGroup() {
         </Button>
       </SettingGroup>
       <Dialog
-        open={actionDialog == true}
+        open={actionDialog === true}
         onOpenChange={(open) => {
           if (!open) {
             setActionDialog(null);

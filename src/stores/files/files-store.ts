@@ -124,8 +124,7 @@ export const useFilesStore = create<FilesStore>()(
       return {
         collections: [initialCollection],
         activeCollection: "0",
-        activeFileId: emptyNavigation.activeFileId,
-        currentFolderId: emptyNavigation.currentFolderId,
+        ...emptyNavigation,
         openedFiles: {},
 
         setActiveCollection: (id) => {
@@ -285,13 +284,10 @@ export const useFilesStore = create<FilesStore>()(
         },
 
         removeItem: (id) => {
-          const parentId = (() => {
-            const { collections, activeCollection } = get();
-            return (
-              collections.find((c) => c.id === activeCollection)?.nodes[id]
-                ?.parentId ?? null
-            );
-          })();
+          const before = get();
+          const parentId =
+            before.collections.find((c) => c.id === before.activeCollection)
+              ?.nodes[id]?.parentId ?? null;
 
           let removedIds = null as Set<string> | null;
 

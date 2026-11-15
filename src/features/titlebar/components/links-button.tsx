@@ -190,7 +190,7 @@ function LinksPopoverContent() {
             </InputGroupAddon>
           </InputGroup>
 
-          {filteredLinks.length != 0 ? (
+          {filteredLinks.length !== 0 ? (
             <ScrollArea className="min-h-0 flex-1 grow">
               <div className="flex flex-col gap-1">
                 {filteredLinks.map((link) => {

@@ -133,7 +133,7 @@ export const getAvailableName = (
 };
 
 /* -------------------------------------------------------------------------- */
-/*                     Cleaning untrusted data, file formats                   */
+/*                  Untrusted data, file formats, public ids                  */
 /* -------------------------------------------------------------------------- */
 
 type IdFactory = (trail: string[], type: NodeType["type"]) => string;
@@ -209,73 +209,6 @@ export const toTree = (nodes: NodeMap): TreeNode[] => {
     );
 
   return walk(null);
-};
-
-/**
- * Cleans stored (flat) data: drops broken nodes, nodes whose parent is
- * missing or isn't a folder, and anything caught in a parent loop, then makes
- * names unique within each folder.
- */
-export const normalizeNodes = (raw: unknown): NodeMap => {
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return {};
-
-  const valid: NodeMap = {};
-
-  for (const [key, entry] of Object.entries(raw)) {
-    if (typeof entry !== "object" || entry === null) continue;
-
-    const { type, name, content, parentId, updatedAt, createdAt } =
-      entry as Record<string, unknown>;
-    if (type !== "file" && type !== "folder") continue;
-    if (typeof name !== "string" || name.trim() === "") continue;
-    if (parentId !== null && typeof parentId !== "string") continue;
-
-    const base = {
-      id: key,
-      parentId: parentId as string | null,
-      name: name.trim(),
-      ...(typeof updatedAt === "number" && { updatedAt }),
-      ...(typeof createdAt === "number" && { createdAt }),
-    };
-
-    const now = Date.now();
-
-    valid[key] =
-      type === "file"
-        ? {
-            ...base,
-            type,
-            content: typeof content === "string" ? content : "",
-            updatedAt: base.updatedAt ?? now,
-            createdAt: base.createdAt ?? now,
-          }
-        : {
-            ...base,
-            type,
-            updatedAt: base.updatedAt ?? now,
-            createdAt: base.createdAt ?? now,
-          };
-  }
-
-  // Keep only nodes that can be reached from the root through folders.
-  const children = buildChildrenIndex(valid);
-  const result: NodeMap = {};
-  const stack: (string | null)[] = [null];
-
-  while (stack.length > 0) {
-    const siblings: NodeType[] = [];
-
-    for (const node of children.get(stack.pop()!) ?? []) {
-      const name = getAvailableName(siblings, node.name, node.type);
-      const clean = { ...node, name };
-
-      siblings.push(clean);
-      result[node.id] = clean;
-      if (isFolder(node)) stack.push(node.id);
-    }
-  }
-
-  return result;
 };
 
 /**
