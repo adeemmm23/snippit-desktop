@@ -158,10 +158,7 @@ type FileItemProps = {
 function FileItem({ file, onSelect }: FileItemProps) {
   return (
     // `value` carries the path so the command filter matches on it; ids are never shown.
-    <CommandItem
-      value={`${file.name} ${file.path} ${file.id}`}
-      onSelect={onSelect}
-    >
+    <CommandItem value={file.path} onSelect={onSelect}>
       <HugeiconsIcon icon={file.isPublic ? FileCloudIcon : File01Icon} />
       <span className="shrink-0 truncate">{file.name}</span>
       <span className="text-muted-foreground grow truncate text-xs" dir="rtl">

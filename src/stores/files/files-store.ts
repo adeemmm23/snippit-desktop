@@ -22,6 +22,11 @@ import {
 
 const MAX_OPENED_FILES = 100;
 
+type SavedFiles = Pick<
+  FilesStore,
+  "collections" | "activeCollection" | "openedFiles"
+>;
+
 export type SaveResult = "saved" | "no-file" | "read-only";
 
 export type OpenedFile = { id: string; count: number; openedAt: number };
@@ -353,7 +358,12 @@ export const useFilesStore = create<FilesStore>()(
     {
       name: "files",
       version: 3,
-      storage: createFsStorage<FilesStore>(),
+      storage: createFsStorage<SavedFiles>(),
+      partialize: ({ collections, activeCollection, openedFiles }) => ({
+        collections,
+        activeCollection,
+        openedFiles,
+      }),
       migrate: (persisted) => {
         const state = (persisted ?? {}) as Partial<FilesStore>;
         const now = Date.now();
