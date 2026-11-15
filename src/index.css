@@ -159,6 +159,10 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
 }
 
 @layer utilities {
