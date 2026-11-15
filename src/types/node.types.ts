@@ -3,8 +3,8 @@ type BaseNode = {
   /** The folder this node lives in. `null` means the collection root. */
   parentId: string | null;
   name: string;
-  updatedAt?: string;
-  createdAt?: string;
+  updatedAt: number;
+  createdAt: number;
 };
 
 export type FileType = BaseNode & {
@@ -25,8 +25,8 @@ export type Collection = {
   id: string;
   name: string;
   nodes: NodeMap;
-  updatedAt?: string;
-  createdAt?: string;
+  updatedAt: number;
+  createdAt: number;
 };
 
 /**

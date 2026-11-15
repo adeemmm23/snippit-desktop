@@ -10,12 +10,7 @@ import {
   type NodeMap,
   type NodeType,
 } from "@/types/node.types";
-import {
-  fromTree,
-  generateId,
-  isPublicId,
-  normalizeNodes,
-} from "@/utils/files.utils";
+import { fromTree, generateId, isPublicId } from "@/utils/files.utils";
 import {
   attachNodes,
   createNode,
@@ -87,6 +82,8 @@ const initialCollection: Collection = {
   id: "0",
   name: "Default",
   nodes: {},
+  updatedAt: Date.now(),
+  createdAt: Date.now(),
 };
 
 /** What is reset when you switch collection. The open history is not part of it. */
@@ -115,7 +112,7 @@ export const useFilesStore = create<FilesStore>()(
         const nodes = change(collection.nodes);
         if (!nodes) return false;
 
-        const now = new Date().toISOString();
+        const now = Date.now();
         set({
           collections: collections.map((c) =>
             c.id === targetId ? { ...c, nodes, updatedAt: now } : c,
@@ -148,7 +145,7 @@ export const useFilesStore = create<FilesStore>()(
           }
 
           const id = generateId();
-          const now = new Date().toISOString();
+          const now = Date.now();
 
           set({
             collections: [
@@ -195,7 +192,7 @@ export const useFilesStore = create<FilesStore>()(
         },
 
         renameCollection: (id, name) => {
-          const now = new Date().toISOString();
+          const now = Date.now();
 
           set({
             collections: get().collections.map((collection) =>
@@ -253,6 +250,8 @@ export const useFilesStore = create<FilesStore>()(
 
           const { template } = useEditorStore.getState();
 
+          const now = Date.now();
+
           const saved = updateNodes(undefined, (nodes) => {
             const file = nodes[activeFileId];
             if (!file || !isFile(file)) return null;
@@ -262,7 +261,7 @@ export const useFilesStore = create<FilesStore>()(
               [file.id]: {
                 ...file,
                 content: template,
-                updatedAt: new Date().toISOString(),
+                updatedAt: now,
               },
             };
           });
@@ -359,36 +358,28 @@ export const useFilesStore = create<FilesStore>()(
       name: "files",
       version: 3,
       storage: createFsStorage<FilesStore>(),
-      // v0/v1 stored nested `files` with paths made of names; v2 kept one open
-      // history for all collections (now one per collection).
-      // Navigation can't be carried over; the tree is converted and every
-      // node gets a clean id.
       migrate: (persisted) => {
         const state = (persisted ?? {}) as Partial<FilesStore>;
+        const now = Date.now();
 
-        const collections = ((state.collections ?? []) as unknown[])
-          .filter(
-            (c): c is Record<string, unknown> =>
-              typeof c === "object" &&
-              c !== null &&
-              typeof (c as Collection).name === "string",
-          )
+        const collections: Collection[] = (
+          (state.collections ?? []) as (Partial<Collection> & {
+            files?: unknown;
+          })[]
+        )
+          .filter((c) => typeof c?.name === "string")
           .map((c) => ({
-            ...(c as unknown as Collection),
-            id: (c.id as string) || generateId(),
-            nodes: Array.isArray(c.files)
-              ? fromTree(c.files, () => generateId())
-              : normalizeNodes(c.nodes),
+            id: c.id || generateId(),
+            name: c.name!,
+            nodes: fromTree(c.files, generateId),
+            createdAt: now,
+            updatedAt: now,
           }));
         const safe = collections.length > 0 ? collections : [initialCollection];
 
         return {
           ...state,
-          collections: safe.map(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            ({ files: _removed, ...rest }: Collection & { files?: unknown }) =>
-              rest,
-          ),
+          collections: safe,
           activeCollection: safe.some((c) => c.id === state.activeCollection)
             ? state.activeCollection
             : safe[0].id,

@@ -166,6 +166,7 @@ export const fromTree = (
     const finalName = getAvailableName(taken, name.trim(), type);
     const nodeTrail = [...trail, finalName];
     const id = makeId(nodeTrail, type);
+    const now = Date.now();
 
     const node: NodeType =
       type === "file"
@@ -175,8 +176,17 @@ export const fromTree = (
             type,
             name: finalName,
             content: typeof content === "string" ? content : "",
+            updatedAt: now,
+            createdAt: now,
           }
-        : { id, parentId, type, name: finalName };
+        : {
+            id,
+            parentId,
+            type,
+            name: finalName,
+            updatedAt: now,
+            createdAt: now,
+          };
 
     taken.push(node);
     out[id] = node;
@@ -224,14 +234,27 @@ export const normalizeNodes = (raw: unknown): NodeMap => {
       id: key,
       parentId: parentId as string | null,
       name: name.trim(),
-      ...(typeof updatedAt === "string" && { updatedAt }),
-      ...(typeof createdAt === "string" && { createdAt }),
+      ...(typeof updatedAt === "number" && { updatedAt }),
+      ...(typeof createdAt === "number" && { createdAt }),
     };
+
+    const now = Date.now();
 
     valid[key] =
       type === "file"
-        ? { ...base, type, content: typeof content === "string" ? content : "" }
-        : { ...base, type };
+        ? {
+            ...base,
+            type,
+            content: typeof content === "string" ? content : "",
+            updatedAt: base.updatedAt ?? now,
+            createdAt: base.createdAt ?? now,
+          }
+        : {
+            ...base,
+            type,
+            updatedAt: base.updatedAt ?? now,
+            createdAt: base.createdAt ?? now,
+          };
   }
 
   // Keep only nodes that can be reached from the root through folders.
@@ -262,9 +285,9 @@ export const normalizeNodes = (raw: unknown): NodeMap => {
  * because a file and a folder may share a name.
  */
 export const makePublicIdFactory =
-  (sourcePath: string): IdFactory =>
+  (collectionID: string): IdFactory =>
   (trail, type) =>
-    `public:${sourcePath}/${trail.join("/")}#${type}`;
+    `public:${collectionID}/${trail.join("/")}#${type}`;
 
 /** True for ids made by `makePublicIdFactory`. `null` (the root) is not public. */
 export const isPublicId = (id: string | null): boolean =>
