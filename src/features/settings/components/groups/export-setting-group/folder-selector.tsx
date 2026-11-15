@@ -1,6 +1,6 @@
 import { ArrowLeft, Folder01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import FilePath from "./file-path";
 import ImportDialogFooter from "./import-dialog-footer";
@@ -16,10 +16,11 @@ import {
 } from "@/ui/dialog";
 import { ScrollArea } from "@/ui/scroll-area";
 import { Separator } from "@/ui/separator";
-import { getNodeContent } from "@/utils/files.utils";
+import { buildChildrenIndex, getAncestry } from "@/utils/files.utils";
 
 type FolderSelectorProps = {
-  onSelect: (folder: string[]) => void;
+  /** Called with the chosen folder's id, `null` for the collection root. */
+  onSelect: (folderId: string | null) => void;
   selectedCollection: string;
 };
 
@@ -28,22 +29,29 @@ export default function FolderSelector({
   selectedCollection,
 }: FolderSelectorProps) {
   const collections = useFilesStore((state) => state.collections);
-  const files =
-    collections.find((c) => c.id === selectedCollection)?.files || [];
+  const nodes = useMemo(
+    () => collections.find((c) => c.id === selectedCollection)?.nodes ?? {},
+    [collections, selectedCollection],
+  );
+  const children = useMemo(() => buildChildrenIndex(nodes), [nodes]);
 
-  const [path, setPath] = useState<string[]>([]);
-  const [selectedPath, setSelectedPath] = useState<string[]>([]);
+  // The folder being browsed, and the one that is highlighted.
+  const [browsingId, setBrowsingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const node = getNodeContent(path, files);
-  const currentItems = node && isFolder(node) ? node.files : files;
+  // The folders from the root down to the one being browsed.
+  const crumbs = getAncestry(nodes, browsingId ?? "")
+    .filter(isFolder)
+    .map(({ id, name }) => ({ id, name }));
+  const currentItems = children.get(crumbs.at(-1)?.id ?? null) ?? [];
 
   const currentFolders = currentItems
     .filter(isFolder)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const handlePathChange = (nextPath: string[]) => {
-    setPath(nextPath);
-    setSelectedPath(nextPath);
+  const handleNavigate = (folderId: string | null) => {
+    setBrowsingId(folderId);
+    setSelectedId(folderId);
   };
 
   return (
@@ -61,13 +69,13 @@ export default function FolderSelector({
         <Button
           size="icon-sm"
           variant="ghost"
-          disabled={path.length === 0}
-          onClick={() => handlePathChange(path.slice(0, -1))}
+          disabled={browsingId === null}
+          onClick={() => handleNavigate(crumbs.at(-2)?.id ?? null)}
         >
           <HugeiconsIcon icon={ArrowLeft} className="size-4 shrink-0" />
         </Button>
         <Separator orientation="vertical" className="my-auto h-4" />
-        <FilePath path={path} onPathChange={handlePathChange} />
+        <FilePath crumbs={crumbs} onNavigate={handleNavigate} />
       </div>
       <Separator />
       <ScrollArea className="min-h-0 flex-1 grow">
@@ -81,16 +89,15 @@ export default function FolderSelector({
             </div>
           ) : (
             currentFolders.map((folder) => {
-              const nextPath = [...path, folder.name];
-              const isSelected = selectedPath.join("/") === nextPath.join("/");
+              const isSelected = selectedId === folder.id;
 
               return (
                 <Button
-                  key={folder.name}
+                  key={folder.id}
                   variant={isSelected ? "secondary" : "ghost"}
                   className="justify-start gap-2"
-                  onClick={() => setSelectedPath(nextPath)}
-                  onDoubleClick={() => handlePathChange(nextPath)}
+                  onClick={() => setSelectedId(folder.id)}
+                  onDoubleClick={() => handleNavigate(folder.id)}
                 >
                   <HugeiconsIcon
                     icon={Folder01Icon}
@@ -104,9 +111,9 @@ export default function FolderSelector({
         </div>
       </ScrollArea>
       <ImportDialogFooter
-        path={path}
+        folderId={browsingId}
         onSelect={() => {
-          onSelect(selectedPath);
+          onSelect(selectedId);
         }}
         selectedCollection={selectedCollection}
       />

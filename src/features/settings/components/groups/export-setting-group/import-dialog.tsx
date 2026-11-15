@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 
 import FolderSelector from "./folder-selector";
 import ImportFileDropzone from "./import-file-dropzone";
@@ -6,7 +7,7 @@ import ImportFileDropzone from "./import-file-dropzone";
 import { VARIABLE_FORMATS } from "@/constants/files.constants";
 import { useFilesStore } from "@/stores/files/files-store";
 import useSettingsStore from "@/stores/settings/settings-store";
-import type { Node } from "@/types/node.types";
+import type { NodeMap } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -27,9 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { fromTree, generateId, getAncestry } from "@/utils/files.utils";
+import { mapFileContent } from "@/utils/node-ops.utils";
 
 export default function ImportDialog() {
-  const addFiles = useFilesStore((state) => state.addFiles);
+  const addNodes = useFilesStore((state) => state.addNodes);
   const variableFormat = useSettingsStore((state) => state.variableFormat);
 
   const collections = useFilesStore((state) => state.collections);
@@ -43,11 +46,20 @@ export default function ImportDialog() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
-  const [importFolderPath, setImportFolderPath] = useState<string[]>([]);
+  const [importFolderId, setImportFolderId] = useState<string | null>(null);
 
   const canConfirmImport = importFile !== null;
+
+  // The label is worked out from the id, so it stays right if the folder is renamed.
   const importFolderLabel =
-    importFolderPath.length === 0 ? "Root" : importFolderPath.join(" / ");
+    importFolderId === null
+      ? "Root"
+      : getAncestry(
+          collections.find((c) => c.id === selectedCollection)?.nodes ?? {},
+          importFolderId,
+        )
+          .map((node) => node.name)
+          .join(" / ") || "Root";
 
   const handleImport = () => {
     if (!importFile) return;
@@ -58,26 +70,24 @@ export default function ImportDialog() {
         const importedData = JSON.parse(event.target?.result as string);
         const { files, variableFormat: newVariableFormat } = importedData;
 
-        if (!newVariableFormat) return;
-        if (!Array.isArray(files)) return;
-
-        let fixedFiles = files;
-
-        if (newVariableFormat !== variableFormat) {
-          fixedFiles = changeVariableFormat(
-            files,
-            newVariableFormat,
-            variableFormat,
-          );
+        if (!newVariableFormat || !Array.isArray(files)) {
+          toast.error("This isn't a valid Snippit export file");
+          return;
         }
 
-        console.log("Imported files:", fixedFiles);
+        // Never trust the file's shape: clean it while turning it into nodes.
+        // addNodes then gives every node a new id of its own.
+        let nodes = fromTree(files, generateId);
 
-        addFiles(fixedFiles, importFolderPath, selectedCollection);
+        if (newVariableFormat !== variableFormat) {
+          nodes = changeVariableFormat(nodes, newVariableFormat, variableFormat);
+        }
+
+        addNodes(nodes, importFolderId, selectedCollection);
         setImportOpen(false);
         setImportFile(null);
-      } catch (error) {
-        return error;
+      } catch {
+        toast.error("Could not read this file");
       }
     };
     reader.readAsText(importFile);
@@ -119,6 +129,8 @@ export default function ImportDialog() {
               value={selectedCollection}
               onValueChange={(value) => {
                 setSelectedCollection(value ?? activeCollection);
+                // A folder id only exists inside its own collection.
+                setImportFolderId(null);
               }}
             >
               <SelectTrigger className="w-full">
@@ -147,7 +159,7 @@ export default function ImportDialog() {
                 }
               />
               <FolderSelector
-                onSelect={setImportFolderPath}
+                onSelect={setImportFolderId}
                 selectedCollection={selectedCollection}
               />
             </Dialog>
@@ -171,27 +183,17 @@ const formatVariable = (name: string, format: string) => {
 };
 
 const changeVariableFormat = (
-  items: Node[],
+  nodes: NodeMap,
   fromFormat: string,
   toFormat: string,
-): Node[] => {
+): NodeMap => {
   const fromRegex = VARIABLE_FORMATS.find((f) => f.label === fromFormat)?.value;
 
-  if (!fromRegex) return items;
+  if (!fromRegex) return nodes;
 
-  return items.map((item) => {
-    if (item.type === "folder") {
-      return {
-        ...item,
-        files: changeVariableFormat(item.files, fromFormat, toFormat),
-      };
-    }
-
-    return {
-      ...item,
-      content: item.content.replace(fromRegex, (_, variableName) =>
-        formatVariable(variableName, toFormat),
-      ),
-    };
-  });
+  return mapFileContent(nodes, (content) =>
+    content.replace(fromRegex, (_, variableName) =>
+      formatVariable(variableName, toFormat),
+    ),
+  );
 };

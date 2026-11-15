@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 import useSettingsStore from "@/stores/settings/settings-store";
 import type { Collection } from "@/types/node.types";
+import { fromTree, makePublicIdFactory } from "@/utils/files.utils";
 
 export type PublicCollection = Collection & {
   sourcePath: string;
@@ -38,7 +39,7 @@ export const usePublicCollectionsStore = create<PublicCollectionsState>(
             loadedCollections.push({
               id: `public_${filePath}`,
               name: parsed.name || fileName,
-              files: parsed.files,
+              nodes: fromTree(parsed.files, makePublicIdFactory(filePath)),
               sourcePath: filePath,
             });
           }

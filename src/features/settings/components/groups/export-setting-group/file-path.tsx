@@ -16,32 +16,22 @@ import {
 } from "@/ui/dropdown-menu";
 
 type FilePathProps = {
-  path: string[];
-  onPathChange: (path: string[]) => void;
+  /** Folders from the root down to the one being browsed. */
+  crumbs: { id: string; name: string }[];
+  /** `null` goes back to the root. */
+  onNavigate: (folderId: string | null) => void;
 };
 
-export default function FilePath({ path, onPathChange }: FilePathProps) {
-  const { parenFolder, rest } = path.reduce(
-    (acc, segment, index) => {
-      if (index === path.length - 1) {
-        acc.parenFolder = segment;
-      } else {
-        acc.rest.push(segment);
-      }
-      return acc;
-    },
-    {
-      parenFolder: null as string | null,
-      rest: [] as string[],
-    },
-  );
+export default function FilePath({ crumbs, onNavigate }: FilePathProps) {
+  const parenFolder = crumbs.at(-1) ?? null;
+  const rest = crumbs.slice(0, -1);
 
   return (
     <Breadcrumb className="flex h-8 items-center px-2">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink
-            onClick={() => onPathChange([])}
+            onClick={() => onNavigate(null)}
             className="select-none"
           >
             Root
@@ -62,18 +52,16 @@ export default function FilePath({ path, onPathChange }: FilePathProps) {
                 />
                 <DropdownMenuContent align="start" className="w-50">
                   <DropdownMenuGroup>
-                    {rest.map((segment, index) => (
+                    {rest.map((segment) => (
                       <DropdownMenuItem
-                        key={segment}
+                        key={segment.id}
                         render={
                           <BreadcrumbLink
-                            title={segment}
+                            title={segment.name}
                             className="truncate"
-                            onClick={() => {
-                              onPathChange(path.slice(0, index + 1));
-                            }}
+                            onClick={() => onNavigate(segment.id)}
                           >
-                            {segment}
+                            {segment.name}
                           </BreadcrumbLink>
                         }
                       />
@@ -89,7 +77,7 @@ export default function FilePath({ path, onPathChange }: FilePathProps) {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink className="select-none">
-                {parenFolder}
+                {parenFolder.name}
               </BreadcrumbLink>
             </BreadcrumbItem>
           </>

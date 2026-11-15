@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useCollectionNodes } from "@/hooks/use-collection-nodes";
 import { useFilesStore } from "@/stores/files/files-store";
 import {
   Breadcrumb,
@@ -18,9 +19,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/dropdown-menu";
+import { getAncestry } from "@/utils/files.utils";
 
 export default function FilePath() {
-  const activeFile = useFilesStore((state) => state.activeFile);
+  const activeFileId = useFilesStore((state) => state.activeFileId);
+  const { local, publicNodes } = useCollectionNodes();
   const setCurrentWorkingFolder = useFilesStore(
     (state) => state.setCurrentFolder,
   );
@@ -44,7 +47,23 @@ export default function FilePath() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const file = activeFile.length > 0 ? activeFile[activeFile.length - 1] : null;
+  // The open file can be a local or a public one; either way the folders above
+  // it come straight from its parent chain, no path is stored anywhere.
+  const chain =
+    activeFileId === null
+      ? []
+      : (() => {
+          const own = getAncestry(local, activeFileId);
+          return own.length > 0
+            ? own
+            : publicNodes
+              ? getAncestry(publicNodes, activeFileId)
+              : [];
+        })();
+
+  const file = chain.at(-1)?.name ?? null;
+  const folders = chain.slice(0, -1).map(({ id, name }) => ({ id, name }));
+  const parentId = folders.at(-1)?.id ?? null;
 
   if (!file) {
     return (
@@ -66,7 +85,7 @@ export default function FilePath() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbPage
-              onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
+              onClick={() => setCurrentWorkingFolder(parentId)}
               className="max-w-40 truncate text-sm select-none"
               title={file}
             >
@@ -78,21 +97,18 @@ export default function FilePath() {
     );
   }
 
-  const showParent = viewMode === "full" && activeFile.length > 1;
-  const parenFolder = showParent ? activeFile[activeFile.length - 2] : null;
-
-  const dropdownLimit =
-    viewMode === "full" ? activeFile.length - 2 : activeFile.length - 1;
-  const dropdownSegments = activeFile
-    .map((segment, index) => ({ segment, index }))
-    .slice(0, Math.max(0, dropdownLimit));
+  // Full width shows the parent folder next to the file and hides the rest
+  // in the dropdown; medium width puts every folder in the dropdown.
+  const parenFolder = viewMode === "full" ? (folders.at(-1) ?? null) : null;
+  const dropdownSegments =
+    viewMode === "full" ? folders.slice(0, -1) : folders;
 
   return (
     <Breadcrumb className="fade-in animate-in flex h-9 items-center py-1 opacity-30 transition-opacity duration-500 ease-in-out hover:opacity-100">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink
-            onClick={() => setCurrentWorkingFolder([])}
+            onClick={() => setCurrentWorkingFolder(null)}
             className="max-w-40 truncate text-sm select-none"
           >
             Root
@@ -114,20 +130,16 @@ export default function FilePath() {
                 />
                 <DropdownMenuContent align="start" className="w-50">
                   <DropdownMenuGroup>
-                    {dropdownSegments.map(({ segment, index }) => (
+                    {dropdownSegments.map((segment) => (
                       <DropdownMenuItem
-                        key={index}
+                        key={segment.id}
                         render={
                           <BreadcrumbLink
-                            title={segment}
+                            title={segment.name}
                             className="truncate"
-                            onClick={() =>
-                              setCurrentWorkingFolder(
-                                activeFile.slice(0, index + 1),
-                              )
-                            }
+                            onClick={() => setCurrentWorkingFolder(segment.id)}
                           >
-                            {segment}
+                            {segment.name}
                           </BreadcrumbLink>
                         }
                       />
@@ -144,11 +156,11 @@ export default function FilePath() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink
-                onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
+                onClick={() => setCurrentWorkingFolder(parentId)}
                 className="max-w-40 truncate text-sm select-none"
-                title={parenFolder}
+                title={parenFolder.name}
               >
-                {parenFolder}
+                {parenFolder.name}
               </BreadcrumbLink>
             </BreadcrumbItem>
           </>
@@ -158,7 +170,7 @@ export default function FilePath() {
 
         <BreadcrumbItem>
           <BreadcrumbPage
-            onClick={() => setCurrentWorkingFolder(activeFile.slice(0, -1))}
+            onClick={() => setCurrentWorkingFolder(parentId)}
             className="max-w-40 truncate text-sm select-none"
             title={file}
           >
