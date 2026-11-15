@@ -3,8 +3,6 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -125,28 +123,26 @@
     overscroll-behavior: none;
   }
 
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background/50 text-foreground font-sans;
+  }
+
   .theme-transition * {
     transition: none !important;
   }
 
   ::selection {
-    color: oklch(from var(--color-primary-foreground) calc(l + 0.05) c h);
-    background-color: oklch(from var(--color-primary) calc(l + 0.05) c h);
+    color: var(--primary-foreground);
+    background-color: var(--primary);
   }
 
   input::placeholder {
     user-select: none;
     -webkit-user-select: none;
-  }
-
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background/50 text-foreground font-sans;
-  }
-  html {
-    @apply font-sans;
   }
 
   [data-dnd-overlay]:not([style*="--dnd-translate"]) {
@@ -157,7 +153,6 @@
     appearance: none;
     -webkit-appearance: none;
   }
-
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     appearance: none;
