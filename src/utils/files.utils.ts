@@ -285,9 +285,9 @@ export const normalizeNodes = (raw: unknown): NodeMap => {
  * because a file and a folder may share a name.
  */
 export const makePublicIdFactory =
-  (collectionID: string): IdFactory =>
+  (filePath: string): IdFactory =>
   (trail, type) =>
-    `public:${collectionID}/${trail.join("/")}#${type}`;
+    `public:${filePath}/${trail.join("/")}#${type}`;
 
 /** True for ids made by `makePublicIdFactory`. `null` (the root) is not public. */
 export const isPublicId = (id: string | null): boolean =>

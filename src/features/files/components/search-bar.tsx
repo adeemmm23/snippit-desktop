@@ -1,4 +1,8 @@
-import { Search01Icon } from "@hugeicons/core-free-icons";
+import {
+  File01Icon,
+  FileCloudIcon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -34,7 +38,10 @@ export default function SearchBar() {
   // Local files plus public ones, except public files a local file with the
   // same path replaces (the folder view hides those too).
   const indexedFiles = useMemo<SearchFile[]>(() => {
-    const localFiles = indexFiles(local).map((f) => ({ ...f, isPublic: false }));
+    const localFiles = indexFiles(local).map((f) => ({
+      ...f,
+      isPublic: false,
+    }));
     if (!publicNodes) return localFiles;
 
     const localPaths = new Set(localFiles.map((f) => f.path));
@@ -160,13 +167,14 @@ function FileItem({ file, onSelect }: FileItemProps) {
   return (
     // `value` carries the path so the command filter matches on it; ids are never shown.
     <CommandItem
-      className="gap-5"
+      // className="gap-5"
       value={`${file.name} ${file.path} ${file.id}`}
       onSelect={onSelect}
     >
+      <HugeiconsIcon icon={file.isPublic ? FileCloudIcon : File01Icon} />
       <span className="shrink-0 truncate">{file.name}</span>
-      <span className="text-muted-foreground grow truncate text-right text-xs">
-        {file.path}
+      <span className="text-muted-foreground grow truncate text-xs" dir="rtl">
+        Root/{file.path}
       </span>
     </CommandItem>
   );

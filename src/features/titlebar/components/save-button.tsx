@@ -19,9 +19,9 @@ export default function SaveButton() {
     if (result === "saved") {
       toast.success("File saved successfully!");
     } else if (result === "read-only") {
-      toast.error("Public files are read-only. Download it to your collection first.");
+      toast.error("Public files are read-only. Download first!");
     } else {
-      toast.error("No file is open. Open a file from the list to save it.");
+      toast.error("No file is open to be saved!");
     }
   };
 
