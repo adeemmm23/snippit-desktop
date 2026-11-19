@@ -4,29 +4,38 @@ import { extractParts } from "./utils";
 import useSettingsStore from "../settings/settings-store";
 
 import { VARIABLE_FORMATS } from "@/constants/files.constants";
-import type { Part } from "@/types/editor.types";
+import type { LayoutEntry, Part } from "@/types/editor.types";
 
 type EditorStore = {
   template: string;
   variables: Record<string, string>;
   parts: Part[];
+  /** Ordered structure of the variables panel (plain variables and blocks) */
+  layout: LayoutEntry[];
+  /** How many times each repeated block is repeated, by block name */
+  blockCounts: Record<string, number>;
   setTemplate: (template: string) => void;
   setVariable: (name: string, value: string) => void;
   resetVariables: () => void;
+  addBlock: (name: string) => void;
+  removeBlock: (name: string) => void;
 };
 
 export const useEditorStore = create<EditorStore>()((set, get) => ({
   template: "",
   variables: {},
   parts: [],
+  layout: [],
+  blockCounts: {},
   setTemplate: (template) => {
     const { label: regexLabel, value: regexValue } = VARIABLE_FORMATS.find(
       (format) => format.label === useSettingsStore.getState().variableFormat,
     )!;
 
-    const { newVariables, newParts } = extractParts({
+    const { newVariables, newParts, newLayout, newBlockCounts } = extractParts({
       template,
       variables: get().variables,
+      blockCounts: get().blockCounts,
       regexLabel,
       regexValue,
     });
@@ -35,6 +44,8 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
       template,
       variables: newVariables,
       parts: newParts,
+      layout: newLayout,
+      blockCounts: newBlockCounts,
     });
   },
   setVariable: (name, value) => {
@@ -56,10 +67,69 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
         newVariables[key] = "";
       });
 
-      return { variables: newVariables };
+      // Repeated blocks go back to a single instance
+      return { variables: newVariables, blockCounts: {} };
     });
 
     // Same as above
+    get().setTemplate(get().template);
+  },
+  addBlock: (name) => {
+    const entry = get().layout.find(
+      (item) => item.type === "block" && item.name === name,
+    );
+
+    if (entry?.type !== "block") {
+      return;
+    }
+
+    const variables = { ...get().variables };
+
+    // A single instance uses the plain names, from the second one on every
+    // instance is numbered, so the first values move to "<name> 1"
+    if (entry.count === 1) {
+      entry.names.forEach((variable) => {
+        variables[`${variable} 1`] = variables[variable] ?? "";
+        delete variables[variable];
+      });
+    }
+
+    set((state) => ({
+      variables,
+      blockCounts: { ...state.blockCounts, [name]: entry.count + 1 },
+    }));
+
+    get().setTemplate(get().template);
+  },
+  removeBlock: (name) => {
+    const entry = get().layout.find(
+      (item) => item.type === "block" && item.name === name,
+    );
+
+    if (entry?.type !== "block" || entry.count <= 1) {
+      return;
+    }
+
+    const variables = { ...get().variables };
+
+    // Always removes the last instance
+    entry.names.forEach((variable) => {
+      delete variables[`${variable} ${entry.count}`];
+    });
+
+    // Back to a single instance, the first values go back to the plain names
+    if (entry.count === 2) {
+      entry.names.forEach((variable) => {
+        variables[variable] = variables[`${variable} 1`] ?? "";
+        delete variables[`${variable} 1`];
+      });
+    }
+
+    set((state) => ({
+      variables,
+      blockCounts: { ...state.blockCounts, [name]: entry.count - 1 },
+    }));
+
     get().setTemplate(get().template);
   },
 }));
