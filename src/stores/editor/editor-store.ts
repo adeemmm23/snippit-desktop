@@ -83,19 +83,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
       return;
     }
 
-    const variables = { ...get().variables };
-
-    // A single instance uses the plain names, from the second one on every
-    // instance is numbered, so the first values move to "<name> 1"
-    if (entry.count === 1) {
-      entry.names.forEach((variable) => {
-        variables[`${variable} 1`] = variables[variable] ?? "";
-        delete variables[variable];
-      });
-    }
-
     set((state) => ({
-      variables,
       blockCounts: { ...state.blockCounts, [name]: entry.count + 1 },
     }));
 
@@ -116,14 +104,6 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
     entry.names.forEach((variable) => {
       delete variables[`${variable} ${entry.count}`];
     });
-
-    // Back to a single instance, the first values go back to the plain names
-    if (entry.count === 2) {
-      entry.names.forEach((variable) => {
-        variables[variable] = variables[`${variable} 1`] ?? "";
-        delete variables[`${variable} 1`];
-      });
-    }
 
     set((state) => ({
       variables,

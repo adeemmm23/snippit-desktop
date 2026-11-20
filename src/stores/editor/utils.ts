@@ -189,10 +189,11 @@ export const extractParts: ExtractPartsFunction = ({
             newParts.push({ type: "comment", text: bodyToken.text });
           } else if (bodyToken.kind === "variable") {
             const isShared = outsideNames.has(bodyToken.name);
-            const key =
-              isShared || count === 1
-                ? bodyToken.name
-                : `${bodyToken.name} ${instance + 1}`;
+            // Always numbered, even with a single instance, so adding a
+            // repetition never renames the existing variables
+            const key = isShared
+              ? bodyToken.name
+              : `${bodyToken.name} ${instance + 1}`;
 
             pushVariable(key);
 
