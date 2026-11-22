@@ -2,6 +2,7 @@ import { ThreeDViewIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import RepeatedBlock from "./components/repeated-block";
+import TemplateIssues from "./components/template-issues";
 import VariableInput from "./components/variable-input";
 import VariablesHeader from "./components/variables-header";
 
@@ -36,6 +37,7 @@ export default function Variables() {
       {!isVariables ? (
         <>
           <VariablesHeader />
+          <TemplateIssues />
           <ScrollArea className="grow overflow-auto">
             <div className="flex h-full flex-col gap-4 px-2 py-1">
               {layout.map((entry, index) =>
@@ -68,6 +70,9 @@ export default function Variables() {
           </div>
           <p className="text-sm">No variables detected</p>
           <p className="mt-2 text-xs">{"Add {Something} to your template"}</p>
+          <div className="mt-4 text-left">
+            <TemplateIssues />
+          </div>
           <Button
             variant="ghost"
             size="xs"

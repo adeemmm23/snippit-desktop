@@ -17,7 +17,6 @@ import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useFilesStore } from "@/stores/files/files-store";
-import useSettingsStore from "@/stores/settings/settings-store";
 import { isFolder, type TreeItem } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
@@ -94,7 +93,6 @@ export default function Node({
       const saved = await saveExportFile(
         `${node.name.replace(/[<>:"/\\|?*]/g, "_")}.json`,
         toTree(nodes, node.id),
-        useSettingsStore.getState().variableFormat,
       );
 
       if (saved) toast.success(`Exported ${node.name}`);

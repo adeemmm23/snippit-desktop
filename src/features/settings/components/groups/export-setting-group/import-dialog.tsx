@@ -6,10 +6,7 @@ import { toast } from "sonner";
 import FolderSelector from "./folder-selector";
 import ImportFileDropzone from "./import-file-dropzone";
 
-import { VARIABLE_FORMATS } from "@/constants/files.constants";
 import { useFilesStore } from "@/stores/files/files-store";
-import useSettingsStore from "@/stores/settings/settings-store";
-import type { NodeMap } from "@/types/node.types";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -31,12 +28,9 @@ import {
   SelectValue,
 } from "@/ui/select";
 import { fromTree, generateId, getAncestry } from "@/utils/files.utils";
-import { mapFileContent } from "@/utils/node-ops.utils";
 
 export default function ImportDialog() {
   const addNodes = useFilesStore((state) => state.addNodes);
-  const variableFormat = useSettingsStore((state) => state.variableFormat);
-
   const collections = useFilesStore((state) => state.collections);
   const collectionsList = collections.map((collection) => ({
     value: collection.id,
@@ -70,24 +64,16 @@ export default function ImportDialog() {
     reader.onload = (event) => {
       try {
         const importedData = JSON.parse(event.target?.result as string);
-        const { files, variableFormat: newVariableFormat } = importedData;
+        const { files } = importedData;
 
-        if (!newVariableFormat || !Array.isArray(files)) {
+        if (!Array.isArray(files)) {
           toast.error("This isn't a valid Snippit export file");
           return;
         }
 
         // Never trust the file's shape: clean it while turning it into nodes.
         // addNodes then gives every node a new id of its own.
-        let nodes = fromTree(files, generateId);
-
-        if (newVariableFormat !== variableFormat) {
-          nodes = changeVariableFormat(
-            nodes,
-            newVariableFormat,
-            variableFormat,
-          );
-        }
+        const nodes = fromTree(files, generateId);
 
         addNodes(nodes, importFolderId, selectedCollection);
         setImportOpen(false);
@@ -190,23 +176,3 @@ export default function ImportDialog() {
     </Dialog>
   );
 }
-
-const formatVariable = (name: string, format: string) => {
-  return format.replace("variable", name);
-};
-
-const changeVariableFormat = (
-  nodes: NodeMap,
-  fromFormat: string,
-  toFormat: string,
-): NodeMap => {
-  const fromRegex = VARIABLE_FORMATS.find((f) => f.label === fromFormat)?.value;
-
-  if (!fromRegex) return nodes;
-
-  return mapFileContent(nodes, (content) =>
-    content.replace(fromRegex, (_, variableName) =>
-      formatVariable(variableName, toFormat),
-    ),
-  );
-};

@@ -1,9 +1,7 @@
 import { create } from "zustand";
 
 import { extractParts } from "./utils";
-import useSettingsStore from "../settings/settings-store";
 
-import { VARIABLE_FORMATS } from "@/constants/files.constants";
 import type { LayoutEntry, Part } from "@/types/editor.types";
 
 type EditorStore = {
@@ -14,6 +12,8 @@ type EditorStore = {
   layout: LayoutEntry[];
   /** How many times each repeated block is repeated, by block name */
   blockCounts: Record<string, number>;
+  /** Mistakes found in the template syntax, ready to show */
+  issues: string[];
   setTemplate: (template: string) => void;
   setVariable: (name: string, value: string) => void;
   resetVariables: () => void;
@@ -27,18 +27,14 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
   parts: [],
   layout: [],
   blockCounts: {},
+  issues: [],
   setTemplate: (template) => {
-    const { label: regexLabel, value: regexValue } = VARIABLE_FORMATS.find(
-      (format) => format.label === useSettingsStore.getState().variableFormat,
-    )!;
-
-    const { newVariables, newParts, newLayout, newBlockCounts } = extractParts({
-      template,
-      variables: get().variables,
-      blockCounts: get().blockCounts,
-      regexLabel,
-      regexValue,
-    });
+    const { newVariables, newParts, newLayout, newBlockCounts, issues } =
+      extractParts({
+        template,
+        variables: get().variables,
+        blockCounts: get().blockCounts,
+      });
 
     set({
       template,
@@ -46,6 +42,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
       parts: newParts,
       layout: newLayout,
       blockCounts: newBlockCounts,
+      issues,
     });
   },
   setVariable: (name, value) => {
@@ -113,12 +110,3 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
     get().setTemplate(get().template);
   },
 }));
-
-// Refreshes the template whenever the variable format changes
-useSettingsStore.subscribe(
-  (state) => state.variableFormat,
-  () => {
-    const template = useEditorStore.getState().template;
-    useEditorStore.getState().setTemplate(template);
-  },
-);

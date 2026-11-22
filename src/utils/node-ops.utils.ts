@@ -202,17 +202,3 @@ export const ensureFolderPath = (
 
   return { nodes: result, id: parentId, changed };
 };
-
-/** Applies `change` to the content of every file. */
-export const mapFileContent = (
-  nodes: NodeMap,
-  change: (content: string) => string,
-): NodeMap => {
-  const result: NodeMap = {};
-
-  for (const [id, node] of Object.entries(nodes)) {
-    result[id] = node.type === "file" ? { ...node, content: change(node.content) } : node;
-  }
-
-  return result;
-};

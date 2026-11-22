@@ -62,8 +62,7 @@ export default function PublicCollectionsSettingGroup() {
               const isValidCollection =
                 typeof parsed === "object" &&
                 parsed !== null &&
-                Array.isArray(parsed.files) &&
-                typeof parsed.variableFormat === "string";
+                Array.isArray(parsed.files);
 
               if (isValidCollection) {
                 allValidCollections.push({

@@ -1,11 +1,17 @@
+import {
+  BLOCK_CLOSE_LINE,
+  BLOCK_NAME,
+  BLOCK_OPEN_LINE,
+  COMMENT_CLOSE,
+  COMMENT_OPEN,
+  VARIABLE_NAME,
+} from "@/constants/syntax.constants";
 import type { BlockLayoutEntry, LayoutEntry, Part } from "@/types/editor.types";
 
 type ExtractPartsParams = {
   template: string;
   variables: Record<string, string>;
   blockCounts: Record<string, number>;
-  regexLabel: string;
-  regexValue: RegExp;
 };
 
 type ExtractPartsResult = {
@@ -13,6 +19,8 @@ type ExtractPartsResult = {
   newParts: Part[];
   newLayout: LayoutEntry[];
   newBlockCounts: Record<string, number>;
+  /** Mistakes in the template syntax, worded for the person writing it */
+  issues: string[];
 };
 
 type ExtractPartsFunction = (params: ExtractPartsParams) => ExtractPartsResult;
@@ -23,30 +31,30 @@ type Token =
   | { kind: "comment"; text: string }
   | { kind: "block"; name: string; body: Token[] };
 
-// #? Name
-// ...body...
-// ?#
-const BLOCK_SOURCE =
-  "#\\?[ \\t]*([^\\s#][^\\r\\n]*?)[ \\t]*\\r?\\n([\\s\\S]*?)\\r?\\n?[ \\t]*\\?#";
-const COMMENT_SOURCE = "#!([\\s\\S]*?)!#";
+const ESCAPED = `\\{\\{(?<escaped>${VARIABLE_NAME})\\}\\}`;
+const VARIABLE = `\\{(?<variable>${VARIABLE_NAME})\\}`;
+const COMMENT = `${COMMENT_OPEN}(?<comment>[\\s\\S]*?)${COMMENT_CLOSE}`;
+// The open and the close marker each take a whole line, the body is whatever
+// sits in between
+const BLOCK =
+  `^[ \\t]*#\\?[ \\t]*(?<blockName>${BLOCK_NAME})[ \\t]*\\r?\\n` +
+  `(?<blockBody>[\\s\\S]*?)\\r?\\n?${BLOCK_CLOSE_LINE}`;
 
-/**
- * Splits a template into text, variables, comments and (optionally) repeated
- * blocks. Every alternative has exactly one capture group, except the block
- * which has two (name and body).
- */
-const tokenize = (
-  template: string,
-  variableSource: string,
-  withBlocks: boolean,
-): Token[] => {
-  const alternatives = [
-    ...(withBlocks ? [`(?:${BLOCK_SOURCE})`] : []),
-    `(?:${variableSource})`,
-    `(?:${COMMENT_SOURCE})`,
-  ];
-  const regex = new RegExp(alternatives.join("|"), "g");
-  const offset = withBlocks ? 2 : 0;
+// Order matters: at the same position the first alternative wins, which is why
+// {{Name}} is tried before {Name}. Blocks can't nest, so a block body is
+// tokenized without the block alternative.
+const ROOT_REGEX = new RegExp(
+  [BLOCK, ESCAPED, VARIABLE, COMMENT].join("|"),
+  "gmu",
+);
+const BODY_REGEX = new RegExp([ESCAPED, VARIABLE, COMMENT].join("|"), "gmu");
+
+const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim();
+
+/** Splits a template into text, variables, comments and repeated blocks. */
+const tokenize = (template: string, withBlocks: boolean): Token[] => {
+  const regex = withBlocks ? ROOT_REGEX : BODY_REGEX;
+  regex.lastIndex = 0;
 
   const tokens: Token[] = [];
   let lastIndex = 0;
@@ -60,16 +68,22 @@ const tokenize = (
       });
     }
 
-    if (withBlocks && match[1] !== undefined) {
+    const { blockName, blockBody, escaped, variable, comment } =
+      match.groups ?? {};
+
+    if (blockName !== undefined) {
       tokens.push({
         kind: "block",
-        name: match[1].trim(),
-        body: tokenize(match[2] ?? "", variableSource, false),
+        name: normalizeName(blockName),
+        body: tokenize(blockBody ?? "", false),
       });
-    } else if (match[offset + 1] !== undefined) {
-      tokens.push({ kind: "variable", name: match[offset + 1] });
-    } else if (match[offset + 2] !== undefined) {
-      tokens.push({ kind: "comment", text: match[offset + 2].trim() });
+    } else if (escaped !== undefined) {
+      // {{Name}} is the way to write the literal text {Name}
+      tokens.push({ kind: "text", text: `{${normalizeName(escaped)}}` });
+    } else if (variable !== undefined) {
+      tokens.push({ kind: "variable", name: normalizeName(variable) });
+    } else if (comment !== undefined) {
+      tokens.push({ kind: "comment", text: comment.trim() });
     }
 
     lastIndex = regex.lastIndex;
@@ -92,14 +106,66 @@ const uniqueVariableNames = (tokens: Token[]): string[] => {
   return names;
 };
 
+/**
+ * What is left of the source once everything that was understood is taken
+ * out: text stays, every other token becomes a placeholder. Line markers that
+ * show up here were not part of any block or comment, so they are mistakes.
+ */
+const leftover = (tokens: Token[]) =>
+  tokens
+    .map((token) => (token.kind === "text" ? token.text : "\u0000"))
+    .join("");
+
+const findIssues = (tokens: Token[]): string[] => {
+  const issues = new Set<string>();
+
+  const rootLeftover = leftover(tokens);
+
+  for (const match of rootLeftover.matchAll(
+    new RegExp(BLOCK_OPEN_LINE, "gm"),
+  )) {
+    issues.add(
+      `Block "${normalizeName(match[1])}" is never closed, put ?# on its own line after it.`,
+    );
+  }
+
+  if (new RegExp(BLOCK_CLOSE_LINE, "m").test(rootLeftover)) {
+    issues.add("Found a ?# line without a #? line opening its block.");
+  }
+
+  const leftovers = [rootLeftover];
+
+  tokens.forEach((token) => {
+    if (token.kind !== "block") return;
+
+    const bodyLeftover = leftover(token.body);
+    leftovers.push(bodyLeftover);
+
+    for (const match of bodyLeftover.matchAll(
+      new RegExp(BLOCK_OPEN_LINE, "gm"),
+    )) {
+      issues.add(
+        `Block "${normalizeName(match[1])}" sits inside block "${token.name}", blocks can't be nested.`,
+      );
+    }
+  });
+
+  if (leftovers.some((text) => new RegExp(COMMENT_OPEN).test(text))) {
+    issues.add(
+      `A comment is opened but never closed, end it with ${COMMENT_CLOSE}`,
+    );
+  }
+
+  return [...issues];
+};
+
 export const extractParts: ExtractPartsFunction = ({
   template,
   variables,
   blockCounts,
-  regexLabel,
-  regexValue,
 }) => {
-  const tokens = tokenize(template, regexValue.source, true);
+  const tokens = tokenize(template, true);
+  const issues = findIssues(tokens);
 
   // Variables used outside of every block stay shared, so a block never
   // renames them, whatever the number of repetitions
@@ -117,10 +183,7 @@ export const extractParts: ExtractPartsFunction = ({
     newVariables[key] = variables[key] || "";
     newParts.push({
       type: "variable",
-      text:
-        newVariables[key] === ""
-          ? regexLabel.replace("variable", key)
-          : newVariables[key],
+      text: newVariables[key] === "" ? `{${key}}` : newVariables[key],
     });
   };
 
@@ -206,5 +269,19 @@ export const extractParts: ExtractPartsFunction = ({
     }
   });
 
-  return { newVariables, newParts, newLayout, newBlockCounts };
+  // A variable written outside a block as "Name 1" would share its input with
+  // the first copy of a block variable called "Name"
+  blockEntries.forEach((entry) => {
+    outsideNames.forEach((outside) => {
+      const base = outside.match(/^(.+) \d+$/)?.[1];
+
+      if (base && entry.names.includes(base)) {
+        issues.push(
+          `Variable "${outside}" clashes with the numbered copies of "${base}" in block "${entry.name}", rename one of them.`,
+        );
+      }
+    });
+  });
+
+  return { newVariables, newParts, newLayout, newBlockCounts, issues };
 };

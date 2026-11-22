@@ -10,7 +10,6 @@ import type { TreeNode } from "@/types/node.types";
 export const saveExportFile = async (
   defaultFileName: string,
   files: TreeNode[],
-  variableFormat: string,
 ): Promise<boolean> => {
   const filePath = await save({
     defaultPath: defaultFileName,
@@ -21,10 +20,7 @@ export const saveExportFile = async (
 
   // The export file keeps the nested format, so it stays readable and
   // works as a public collection file.
-  await writeTextFile(
-    filePath,
-    JSON.stringify({ files, variableFormat }, null, 2),
-  );
+  await writeTextFile(filePath, JSON.stringify({ files }, null, 2));
 
   return true;
 };

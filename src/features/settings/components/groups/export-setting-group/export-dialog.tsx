@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
 
 import { useFilesStore } from "@/stores/files/files-store";
-import useSettingsStore from "@/stores/settings/settings-store";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -43,8 +42,6 @@ export default function ExportDialog() {
   const nodes =
     collections.find((c) => c.id === selectedCollection)?.nodes ?? {};
 
-  const variableFormat = useSettingsStore((state) => state.variableFormat);
-
   const [exportOpen, setExportOpen] = useState(false);
   const [exportFileName, setExportFileName] = useState("snippets.json");
 
@@ -63,7 +60,6 @@ export default function ExportDialog() {
       const saved = await saveExportFile(
         sanitizedExportFileName,
         toTree(nodes),
-        variableFormat,
       );
 
       if (saved) setExportOpen(false);

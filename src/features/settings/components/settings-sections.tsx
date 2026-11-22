@@ -6,7 +6,6 @@ import HelpersSettingGroup from "./groups/helpers-setting-group";
 import PublicCollectionsSettingGroup from "./groups/public-collections-setting-group";
 import ShortcutsGroup from "./groups/shortcuts-setting-group";
 import TooltipsGroup from "./groups/tooltips-setting-group";
-import VariableSettingGroup from "./groups/variable-setting-group";
 import SettingSection from "./ui/setting-section";
 import { useSections } from "../context/sections-context";
 import ExportGroup from "./groups/export-setting-group";
@@ -66,7 +65,6 @@ export default function SettingsSections() {
           id="settings-sections"
         >
           <SettingSection title="Editor">
-            <VariableSettingGroup />
             <HelpersSettingGroup />
             <TimerSettingGroup />
           </SettingSection>
