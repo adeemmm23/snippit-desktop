@@ -24,6 +24,8 @@ import { indexFiles, type IndexedFile } from "@/utils/files.utils";
 
 type SearchFile = IndexedFile & { isPublic: boolean };
 
+const MAX_RESULTS = 10;
+
 export default function SearchBar() {
   // The history of the active collection only; each collection keeps its own.
   const openedFiles = useFilesStore(
@@ -86,7 +88,13 @@ export default function SearchBar() {
   const generateLatest = () =>
     toItems([...openedFiles].sort((a, b) => b.openedAt - a.openedAt));
 
-  const generatePreview = () => indexedFiles.map(renderFile);
+  const generatePreview = () => {
+    const q = query.trim().toLowerCase();
+    return indexedFiles
+      .filter((f) => f.path.toLowerCase().includes(q))
+      .slice(0, MAX_RESULTS)
+      .map(renderFile);
+  };
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
